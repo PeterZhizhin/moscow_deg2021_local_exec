@@ -1,0 +1,13 @@
+fake_sudir_db
+potgres_deg_data
+rabbitmq_data
+redis_deg_data
+
+fake_sudir/venv
+fake_sudir/app/website/database/db.sqlite
+fake_mdm/venv
+
+fake_mdm/__pycache__
+fake_mdm/app/__pycache__
+fake_sudir/app/website/__pycache__
+fake_sudir/app/__pycache__

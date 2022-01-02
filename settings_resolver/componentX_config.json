@@ -1,0 +1,10 @@
+{
+    "data": [
+        {
+            "ID": 123,
+            "MDM_GID_SERVICE_URL": "localhost:8020/mdm_fake_url/generate_gid",
+            "MDM_GID_SERVICE_TOKEN": "test_componentx_service_token"
+        }
+    ],
+    "error": "0"
+}

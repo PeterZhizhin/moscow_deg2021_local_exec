@@ -1,0 +1,43 @@
+{
+    "data": [
+        {
+            "STATUS": 3,
+            "ID": 123,
+            "EXT_ID": 789789,
+            "TITLE": "Fake title for ballot config",
+            "SHORT_TITLE": "Short fake title for ballot config",
+            "REF": "gd",
+            "PUBLIC_KEY": "7beec6c4618c4faca5004ac015b481bea2b85551a58c4e69cf471729d41c5002",
+            "START_TIME": "2021-12-30",
+            "END_TIME": "2022-01-30",
+            "CREATE_DATE": "2021-12-25",
+            "UPDATED_DATE": "2021-12-26",
+            "APPROVED": 1,
+            "IS_TEST": 1,
+            "IS_REVOKE": 0,
+            "MULTI_VOTE": 0,
+            "MIN_COUNT_VOTE": 1,
+            "MAX_COUNT_VOTE": 1,
+            "BALLOT": {},
+            "FORM": {
+                "url": null,
+                "rules": null,
+                "manual": null,
+                "about": null,
+                "agreement": null,
+                "buttonName": null,
+                "errorMessage": null,
+                "messageBeforeVote": null
+            },
+            "LANDING": {
+                "url": null,
+                "buttonName": null,
+                "text": null
+            },
+            "MDM_SERVICE_URL": "localhost:8020/mdm_fake_url",
+            "MDM_SERVICE_TOKEN": "test_componentx_service_token",
+            "MDM_GID_SERVICE_HMAC": null
+        }
+    ],
+    "error": "0"
+}
