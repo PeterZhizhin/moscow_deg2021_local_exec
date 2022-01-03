@@ -19,6 +19,8 @@ services:
         build: ./fake_sudir
         volumes:
             - ./fake_sudir_db:/app/website/database
+        environment:
+            AUTHLIB_INSECURE_TRANSPORT: 1
 
     rabbit_mq:
         ports:
@@ -54,3 +56,118 @@ services:
         restart: always
         ports:
             - 8080:8080
+
+    base_deg_php_not_service:
+        build:
+            context: ./php_env
+            dockerfile: Dockerfile-base-env
+        image: deg_php_base_context
+
+    deg_encryptor:
+        build:
+            context: ./deg_codebase/form/encryptor
+            dockerfile: ${PWD}/php_env/Dockerfile
+        ports:
+            - 8001:8001
+        volumes:
+            - ./sample_deg_configs/encryptor/config:/app/config
+            - ./sample_deg_configs/encryptor/.env:/app/.env
+            - ./storage/encryptor/logs:/app/storage/logs
+            - ./storage/encryptor/framework:/app/storage/framework
+        depends_on:
+            - base_deg_php_not_service
+
+    deg_componentx:
+        build:
+            context: ./deg_codebase/form/componentX
+            dockerfile: ${PWD}/php_env/Dockerfile
+        ports:
+            - 8002:8002
+        volumes:
+            - ./sample_deg_configs/componentX/config:/app/config
+            - ./sample_deg_configs/componentX/.env:/app/.env
+            - ./storage/componentx/logs:/app/storage/logs
+            - ./storage/componentx/framework:/app/storage/framework
+        depends_on:
+            - base_deg_php_not_service
+            - deg_encryptor
+            - fake_mdm
+            - redis
+            - nginx_server
+        environment:
+            REDIS_HOST: redis
+            ENCRYPTOR_GID_HOST: http://deg_encryptor:8001
+            ARM_VOITING_URL: http://nginx_server/componentX_config.json
+
+    deg_ballot:
+        build:
+            context: ./deg_codebase/form/ballot
+            dockerfile: ${PWD}/php_env/Dockerfile
+        ports:
+            - 8003:8003
+        volumes:
+            - ./sample_deg_configs/ballot/config:/app/config
+            - ./sample_deg_configs/ballot/.env:/app/.env
+            - ./storage/ballot/logs:/app/storage/logs
+            - ./storage/ballot/framework:/app/storage/framework
+            - ./storage/ballot/framework/sessions:/app/storage/framework/sessions
+            - ./storage/ballot/framework/views:/app/storage/framework/views
+            - ./storage/ballot/framework/cache:/app/storage/framework/cache
+        depends_on:
+            - base_deg_php_not_service
+            - deg_encryptor
+            - postgres
+            - redis
+            - rabbit_mq
+        environment:
+            REDIS_HOST: redis
+            DB_HOST: postgres
+            AMQP_HOST: rabbit_mq
+            WAIT_FOR_AMQP: true
+            ENCRYPTOR_GID_HOST: http://deg_encryptor:8001
+            ENCRYPTOR_HOST: http://deg_encryptor:8001
+            ARM_VOITING_URL: http://nginx_server/ballot_config.json
+            ARM_VOITING_REF: http://nginx_server/
+
+    deg_form:
+        build:
+            context: ./deg_codebase/form/form
+            dockerfile: ${PWD}/php_env/Dockerfile
+        ports:
+            - 8004:8004
+        volumes:
+            - ./sample_deg_configs/form/config:/app/config
+            - ./sample_deg_configs/form/.env:/app/.env
+            - ./storage/form/logs:/app/storage/logs
+            - ./storage/form/framework:/app/storage/framework
+            - ./storage/form/framework/sessions:/app/storage/framework/sessions
+            - ./storage/form/framework/views:/app/storage/framework/views
+            - ./storage/form/framework/cache:/app/storage/framework/cache
+        depends_on:
+            - base_deg_php_not_service
+            - fake_sudir
+            - deg_encryptor
+            - deg_ballot
+            - deg_componentx
+            - redis
+        environment:
+            REDIS_HOST: redis
+            DB_HOST: postgres
+            AMQP_HOST: rabbit_mq
+            WAIT_FOR_AMQP: true
+
+            ENCRYPTOR_GID_HOST: http://deg_encryptor:8001
+            ENCRYPTOR_HOST: http://deg_encryptor:8001
+
+            VOTING_EXTERNAL_ID_HOST: http://deg_componentx:8002
+
+            BALLOT_EXTERNAL_HOST: http://localhost
+            BALLOT_EXTERNAL_PORT: 8003
+            BALLOT_GET_GUID_URL: http://deg_ballot:8003/ballot/getGuid
+
+            ARM_VOITING_URL: http://nginx_server/ballot_config.json
+            ARM_VOITING_REF: http://nginx_server/
+
+            SUDIR_LOGIN_URL: http://localhost:8025/oauth/authorize
+            SUDIR_TOKEN_URL: http://fake_sudir/oauth/token
+            SUDIR_USER_DATA_URL: http://fake_sudir/api/me

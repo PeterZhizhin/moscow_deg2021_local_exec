@@ -2,9 +2,9 @@
 
 return [
     "backurl" => env("APP_URL") . '/got_authorize',
-    "login_url" => "http://localhost:8025/oauth/authorize",
-    "token_url" => "http://localhost:8025/oauth/token",
-    "user_data" => "http://localhost:8025/api/me",
+    "login_url" => env("SUDIR_LOGIN_URL"),
+    "token_url" => env("SUDIR_TOKEN_URL"),
+    "user_data" => env("SUDIR_USER_DATA_URL"),
     "client_id" => "deg_client_id",
     "client_secret" => "deg_client_secret",
 ];

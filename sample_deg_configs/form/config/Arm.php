@@ -5,8 +5,8 @@ return [
     "connstring" => "fake_connstring",
 
     "serviceVoiting" => [
-        "ref" => "localhost:8020/",
-        "url" => "localhost:8020/ballot_config.json",
+        "ref" => env("ARM_VOITING_REF"),
+        "url" => env("ARM_VOITING_URL"),
         "system" => "form",
         "token" => "test_token",
     ],

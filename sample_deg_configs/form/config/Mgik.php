@@ -4,14 +4,14 @@ return [
     # Параметры подключения RabbitMQ
     "amqp" => [
         "queue" => "mgik_queue",
-        "host" => "localhost",
-        "port" => "5672",
-        "login" => "guest",
-        "pass" => "guest",
+        "host" => env("AMQP_HOST", "localhost"),
+        "port" => env("AMQP_PORT", "5672"),
+        "login" => env("AMQP_LOGIN", "guest"),
+        "pass" => env("AMQP_PASSWORD", "guest"),
     ],
     # host для сервиса ballot, порт задаётся через .env переменную BALLOT_EXTERNAL_PORT
-    "host" => "http://localhost",
-    "url" => "http://localhost:8003/ballot/getGuid",
+    "host" => env("BALLOT_EXTERNAL_HOST"), "http://localhost",
+    "url" => env("BALLOT_GET_GUID_URL"),
 
     # Если false, то всегда разрешает пользователю переголосовать (?)
     # То есть, снимается ограничение на время. Полезно для дебага.

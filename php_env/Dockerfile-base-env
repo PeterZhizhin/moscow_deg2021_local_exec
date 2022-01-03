@@ -1,0 +1,26 @@
+FROM php:7.4-cli
+
+RUN pecl install redis-5.3.5
+RUN pecl install swoole-4.8.5
+RUN apt-get update
+RUN apt-get install -y libpq-dev git zip unzip
+
+RUN git clone https://github.com/sjinks/php-stribog && ( \
+    cd php-stribog \
+    && phpize \
+    && ./configure \
+    && make -j "$(nproc)" \
+    && make install \
+) && rm -r php-stribog \ 
+&& docker-php-ext-enable stribog
+
+RUN docker-php-ext-install pdo pdo_pgsql pgsql sockets
+RUN docker-php-ext-enable redis swoole pgsql pdo pdo_pgsql sockets
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+
+COPY wait-for-rabbit-mq.sh /
+
+RUN apt-get install -y netcat
+
+# This image should not be running, it should instead be used as a base image
+CMD ["/bin/true"]
