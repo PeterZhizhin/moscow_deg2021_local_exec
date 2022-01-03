@@ -21,10 +21,10 @@
 ## Инструкция по запуску.
 
 1. Поднимаем заглушки, базы и очереди RabbitMQ через `docker compose up --detach`.
-1. Настраиваем PHP окружение для запуска необходимых компонентов ДЭГ.
+1. Настраиваем PHP окружение для запуска необходимых компонентов ДЭГ (ниже подробнее).
 1. Клонируем код с репозиторием ДЭГ с необходимыми для работы изменениями. Их можно найти в этой ветке: https://github.com/PeterZhizhin/blockchain-voting_2021_extracted/tree/fix_deg
 1. Ставим [PHP Composer](https://getcomposer.org/) и в каждом из сервисов делаем `php composer install`. 
-1. Копируем файлы `.env` и папки `config` в каждый из сервисов из компоненты `form`.
+1. Копируем файлы `.env` и папки `config` в каждый из сервисов из компоненты `form`, конфигурацию можно найти в папке `sample_deg_configs`.
 1. В каждом из компонентов ДЭГ (`form`, `ballot`, `componentX`, `encryptor`) запускаем `php artisian swoole:http start`.
 1. Переходим по адресу [http://localhost:8004/election](http://localhost:8004/election) и пробуем голосовать.
 Если всё будет правильно, то у вас получится получить код по SMS. **Сами SMS не отправляются**, надо посмотреть в stderr сервиса `form`,
@@ -60,6 +60,30 @@ curl --header "SYSTEM: TestSystem" --header "SYSTEM_TOKEN: TOKEN_SECRET" "http:/
   "voteDateTime": "1641117415.182240"
 }
 ```
+
+## Настройка окружения PHP
+
+Окружение настраивается примерно таким образом (Ubuntu):
+```
+sudo apt-get install php-fpm php-pgsql php-redis php-dev php-xml
+```
+
+Затем необходимо установить PHP Swoole:
+```
+sudo pecl install swoole
+```
+Потом нужно добавить модуль через phpenmod примерно вот так:
+```
+sudo bash -c "cat > /etc/php/7.4/mods-available/swoole.ini << EOF
+; Configuration for Open Swoole
+; priority=30
+extension=swoole
+EOF"
+sudo phpenmod -s cli swoole
+```
+
+Далее нужно установить [Стрибог](https://ru.wikipedia.org/wiki/%D0%A1%D1%82%D1%80%D0%B8%D0%B1%D0%BE%D0%B3_(%D1%85%D0%B5%D1%88-%D1%84%D1%83%D0%BD%D0%BA%D1%86%D0%B8%D1%8F)) расширение для PHP.
+Для этого воспользуемся инструкциями из вот этого репозитория: https://github.com/sjinks/php-stribog.
 
 ## Почему этот репозиторий существует
 В исходных кодах московского ДЭГ ([оригинальный репозиторий](https://github.com/moscow-technologies/blockchain-voting_2021),
