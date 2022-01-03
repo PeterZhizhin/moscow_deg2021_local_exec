@@ -22,17 +22,8 @@
 
 1. Поднимаем заглушки, базы и очереди RabbitMQ через `docker compose up --detach`.
 1. Настраиваем PHP окружение для запуска необходимых компонентов ДЭГ.
-1. Клонируем код с репозиторием ДЭГ.
-1. `php artisian` будет зависать. Чтобы это починить делаем следующее.
-Внутри файлов `app/Providers/SwooleConnectionPoolProvider.php` 
-каждого из компонентов (кроме `encryption`) нужно закомментировать создание singleton 'cache'. Это должно выглядеть вот так:
-```php
-/*
- $this->app->singleton('cache', function ($app) {
-            return new Service\Lumen\CacheManager($app);
-        });
-*/
-```
+1. Клонируем код с репозиторием ДЭГ с необходимыми для работы изменениями. Их можно найти в этой ветке: https://github.com/PeterZhizhin/blockchain-voting_2021_extracted/tree/fix_deg
+1. Ставим [PHP Composer](https://getcomposer.org/) и в каждом из сервисов делаем `php composer install`. 
 1. Копируем файлы `.env` и папки `config` в каждый из сервисов из компоненты `form`.
 1. В каждом из компонентов ДЭГ (`form`, `ballot`, `componentX`, `encryptor`) запускаем `php artisian swoole:http start`.
 1. Переходим по адресу [http://localhost:8004/election](http://localhost:8004/election) и пробуем голосовать.
