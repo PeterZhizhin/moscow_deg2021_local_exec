@@ -4,18 +4,17 @@ services:
     nginx_server:
         image: nginx
         ports:
-            - 8020:80
+            - 80:80
         volumes:
             - ./settings_resolver:/usr/share/nginx/html
             - ./nginx.conf:/etc/nginx/conf.d/default.conf
+        depends_on:
+            - fake_sudir
+            - fake_mdm
     fake_mdm:
-        ports:
-            - 5000:80
         build: ./fake_mdm
 
     fake_sudir:
-        ports:
-            - 8025:80
         build: ./fake_sudir
         volumes:
             - ./storage/fake_sudir_db:/app/website/database
@@ -81,8 +80,6 @@ services:
         build:
             context: ./deg_codebase/form/encryptor
             dockerfile: ${PWD}/php_env/Dockerfile
-        ports:
-            - 8001:8001
         volumes:
             - ./sample_deg_configs/encryptor/config:/app/config
             - ./sample_deg_configs/encryptor/.env:/app/.env
@@ -95,8 +92,6 @@ services:
         build:
             context: ./deg_codebase/form/componentX
             dockerfile: ${PWD}/php_env/Dockerfile
-        ports:
-            - 8002:8002
         volumes:
             - ./sample_deg_configs/componentX/config:/app/config
             - ./sample_deg_configs/componentX/.env:/app/.env
@@ -111,7 +106,7 @@ services:
         environment:
             REDIS_HOST: redis
             ENCRYPTOR_GID_HOST: http://deg_encryptor:8001
-            ARM_VOITING_URL: http://nginx_server/componentX_config.json
+            ARM_VOITING_URL: http://nginx_server/html/componentX_config.json
 
     deg_ballot:
         # Раскомментировать для миграций после инициализации PostgreSQL
@@ -119,8 +114,6 @@ services:
         build:
             context: ./deg_codebase/form/ballot
             dockerfile: ${PWD}/php_env/Dockerfile
-        ports:
-            - 8003:8003
         volumes:
             - ./sample_deg_configs/ballot/config:/app/config
             - ./sample_deg_configs/ballot/.env:/app/.env
@@ -143,18 +136,16 @@ services:
 
             ENCRYPTOR_GID_HOST: http://deg_encryptor:8001
             ENCRYPTOR_HOST: http://deg_encryptor:8001
-            ARM_VOITING_URL: http://nginx_server/ballot_config.json
-            ARM_VOITING_REF: http://nginx_server/
+            ARM_VOITING_URL: http://nginx_server/html/ballot_config.json
+            ARM_VOITING_REF: http://nginx_server/html/
 
-            APP_URL: http://localhost:8003
+            APP_URL: http://${HOSTNAME:-localhost}/anon_zone/
             APP_HTTP_PROTOCOL: http
 
     deg_form:
         build:
             context: ./deg_codebase/form/form
             dockerfile: ${PWD}/php_env/Dockerfile
-        ports:
-            - 8004:8004
         volumes:
             - ./sample_deg_configs/form/config:/app/config
             - ./sample_deg_configs/form/.env:/app/.env
@@ -181,17 +172,17 @@ services:
 
             VOTING_EXTERNAL_ID_HOST: http://deg_componentx:8002
 
-            BALLOT_EXTERNAL_HOST: http://localhost
-            BALLOT_EXTERNAL_PORT: 8003
+            BALLOT_EXTERNAL_HOST: /anon_zone
+            BALLOT_EXTERNAL_PORT: ""
             BALLOT_GET_GUID_URL: http://deg_ballot:8003/ballot/getGuid
 
-            ARM_VOITING_URL: http://nginx_server/ballot_config.json
-            ARM_VOITING_REF: http://nginx_server/
+            ARM_VOITING_URL: http://nginx_server/html/ballot_config.json
+            ARM_VOITING_REF: http://nginx_server/html/
 
-            SUDIR_LOGIN_URL: http://localhost:8025/oauth/authorize
+            SUDIR_LOGIN_URL: /oauth/authorize
             SUDIR_TOKEN_URL: http://fake_sudir/oauth/token
             SUDIR_USER_DATA_URL: http://fake_sudir/api/me
 
-            APP_URL: http://localhost:8004
-            APP_HTTP_PROTOCOL: http
-            APP_STATIC_URL: http://localhost:8004/common/static
+            #APP_URL: 
+            #APP_HTTP_PROTOCOL: http
+            #APP_STATIC_URL: /common/static
