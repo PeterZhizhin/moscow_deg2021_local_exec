@@ -18,7 +18,7 @@ services:
             - 8025:80
         build: ./fake_sudir
         volumes:
-            - ./fake_sudir_db:/app/website/database
+            - ./storage/fake_sudir_db:/app/website/database
         environment:
             AUTHLIB_INSECURE_TRANSPORT: 1
 
@@ -29,14 +29,26 @@ services:
         image: rabbitmq:3-management
         hostname: 'mabbit'
         volumes:
-            - ./rabbitmq_data:/var/lib/rabbitmq/mnesia/
+            - ./storage/rabbitmq_data:/var/lib/rabbitmq/mnesia/
 
     redis:
         image: redis
         ports:
             - 6379:6379
         volumes:
-            - ./redis_deg_data:/data
+            - ./storage/redis_deg_data:/data
+
+    redis_admin:
+        image: erikdubbelboer/phpredisadmin
+        ports:
+            - 8081:80
+        environment:
+            - ADMIN_USER=admin
+            - ADMIN_PASS=admin
+            - REDIS_1_HOST=redis
+            - REDIS_1_PORT=6379
+        depends_on:
+            - redis
 
     postgres:
         image: postgres
@@ -49,13 +61,15 @@ services:
             POSTGRES_DB: deg_ballot_db
             PGDATA: /postgres_data
         volumes:
-            - ./potgres_deg_data:/postgres_data
+            - ./storage/postgres_deg_data:/postgres_data
 
     pg_adminer:
         image: adminer
         restart: always
         ports:
             - 8080:8080
+        depends_on:
+            - postgres
 
     base_deg_php_not_service:
         build:

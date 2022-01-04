@@ -15,7 +15,7 @@ return [
 
     # Если false, то всегда разрешает пользователю переголосовать (?)
     # То есть, снимается ограничение на время. Полезно для дебага.
-    "lock_enabled" => false,
+    "lock_enabled" => env("LOCK_ENABLED", true),
 
     # Подпись формы, должен быть один и тот же в ballot и form
     # В ballot указывается внутри config/Encryption.php
