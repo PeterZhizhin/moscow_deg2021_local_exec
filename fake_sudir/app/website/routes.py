@@ -22,7 +22,7 @@ def split_by_crlf(s):
     return [v for v in s.splitlines() if v]
 
 
-@bp.route('/', methods=('GET', 'POST'))
+@bp.route('/oauth/register', methods=('GET', 'POST'))
 def home():
     if request.method == 'POST':
         username = request.form.get('username')
@@ -52,10 +52,10 @@ def home():
     return render_template('home.html', user=user, clients=clients)
 
 
-@bp.route('/logout')
+@bp.route('/oauth/logout')
 def logout():
     del session['id']
-    return redirect('/')
+    return redirect('/election')
 
 
 @bp.route('/create_client', methods=('GET', 'POST'))
