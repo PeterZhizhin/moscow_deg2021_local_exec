@@ -114,6 +114,8 @@ services:
             ARM_VOITING_URL: http://nginx_server/componentX_config.json
 
     deg_ballot:
+        # Раскомментировать для миграций после инициализации PostgreSQL
+        # command: /bin/bash -c "php /app/artisan migrate:fresh --force"
         build:
             context: ./deg_codebase/form/ballot
             dockerfile: ${PWD}/php_env/Dockerfile
