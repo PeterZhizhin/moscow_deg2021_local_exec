@@ -138,10 +138,14 @@ services:
             DB_HOST: postgres
             AMQP_HOST: rabbit_mq
             WAIT_FOR_AMQP: 'true'
+
             ENCRYPTOR_GID_HOST: http://deg_encryptor:8001
             ENCRYPTOR_HOST: http://deg_encryptor:8001
             ARM_VOITING_URL: http://nginx_server/ballot_config.json
             ARM_VOITING_REF: http://nginx_server/
+
+            APP_URL: http://localhost:8003
+            APP_HTTP_PROTOCOL: http
 
     deg_form:
         build:
@@ -185,3 +189,7 @@ services:
             SUDIR_LOGIN_URL: http://localhost:8025/oauth/authorize
             SUDIR_TOKEN_URL: http://fake_sudir/oauth/token
             SUDIR_USER_DATA_URL: http://fake_sudir/api/me
+
+            APP_URL: http://localhost:8003
+            APP_HTTP_PROTOCOL: http
+            APP_STATIC_URL: http://localhost:8004/common/static
