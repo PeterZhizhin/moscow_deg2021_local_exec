@@ -192,6 +192,6 @@ services:
             SUDIR_TOKEN_URL: http://fake_sudir/oauth/token
             SUDIR_USER_DATA_URL: http://fake_sudir/api/me
 
-            APP_URL: http://localhost:8003
+            APP_URL: http://localhost:8004
             APP_HTTP_PROTOCOL: http
             APP_STATIC_URL: http://localhost:8004/common/static
