@@ -123,7 +123,7 @@ services:
             REDIS_HOST: redis
             DB_HOST: postgres
             AMQP_HOST: rabbit_mq
-            WAIT_FOR_AMQP: true
+            WAIT_FOR_AMQP: 'true'
             ENCRYPTOR_GID_HOST: http://deg_encryptor:8001
             ENCRYPTOR_HOST: http://deg_encryptor:8001
             ARM_VOITING_URL: http://nginx_server/ballot_config.json
@@ -154,7 +154,7 @@ services:
             REDIS_HOST: redis
             DB_HOST: postgres
             AMQP_HOST: rabbit_mq
-            WAIT_FOR_AMQP: true
+            WAIT_FOR_AMQP: 'true'
 
             ENCRYPTOR_GID_HOST: http://deg_encryptor:8001
             ENCRYPTOR_HOST: http://deg_encryptor:8001
