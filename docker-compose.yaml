@@ -185,4 +185,4 @@ services:
 
             #APP_URL: 
             #APP_HTTP_PROTOCOL: http
-            #APP_STATIC_URL: /common/static
+            #APP_STATIC_URL: /common/static/
