@@ -106,7 +106,7 @@ services:
         environment:
             REDIS_HOST: redis
             ENCRYPTOR_GID_HOST: http://deg_encryptor:8001
-            ARM_VOITING_URL: http://nginx_server/nginx/componentX_config.json
+            ARM_VOITING_URL: http://nginx_server/html/componentX_config.json
 
     deg_ballot:
         # Раскомментировать для миграций после инициализации PostgreSQL
@@ -136,8 +136,8 @@ services:
 
             ENCRYPTOR_GID_HOST: http://deg_encryptor:8001
             ENCRYPTOR_HOST: http://deg_encryptor:8001
-            ARM_VOITING_URL: http://nginx_server/nginx/ballot_config.json
-            ARM_VOITING_REF: http://nginx_server/nginx/
+            ARM_VOITING_URL: http://nginx_server/html/ballot_config.json
+            ARM_VOITING_REF: http://nginx_server/html/
 
             APP_URL: /ballot
             APP_HTTP_PROTOCOL: http
@@ -176,8 +176,8 @@ services:
             BALLOT_EXTERNAL_PORT: 8003
             BALLOT_GET_GUID_URL: http://deg_ballot:8003/ballot/getGuid
 
-            ARM_VOITING_URL: http://nginx_server/nginx/ballot_config.json
-            ARM_VOITING_REF: http://nginx_server/nginx/
+            ARM_VOITING_URL: http://nginx_server/html/ballot_config.json
+            ARM_VOITING_REF: http://nginx_server/html/
 
             SUDIR_LOGIN_URL: /oauth/authorize
             SUDIR_TOKEN_URL: http://fake_sudir/oauth/token
