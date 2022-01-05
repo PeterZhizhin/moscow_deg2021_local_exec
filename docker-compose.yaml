@@ -139,7 +139,7 @@ services:
             ARM_VOITING_URL: http://nginx_server/html/ballot_config.json
             ARM_VOITING_REF: http://nginx_server/html/
 
-            APP_URL: http://localhost/anon_zone/
+            APP_URL: http://${HOSTNAME:-localhost}/anon_zone/
             APP_HTTP_PROTOCOL: http
 
     deg_form:
