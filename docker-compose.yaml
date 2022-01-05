@@ -139,7 +139,7 @@ services:
             ARM_VOITING_URL: http://nginx_server/html/ballot_config.json
             ARM_VOITING_REF: http://nginx_server/html/
 
-            APP_URL: /ballot
+            APP_URL: http://localhost/anon_zone/
             APP_HTTP_PROTOCOL: http
 
     deg_form:
@@ -172,8 +172,8 @@ services:
 
             VOTING_EXTERNAL_ID_HOST: http://deg_componentx:8002
 
-            BALLOT_EXTERNAL_HOST: http://localhost
-            BALLOT_EXTERNAL_PORT: 8003
+            BALLOT_EXTERNAL_HOST: /anon_zone
+            BALLOT_EXTERNAL_PORT: ""
             BALLOT_GET_GUID_URL: http://deg_ballot:8003/ballot/getGuid
 
             ARM_VOITING_URL: http://nginx_server/html/ballot_config.json
