@@ -34,7 +34,7 @@
                 "buttonName": null,
                 "text": null
             },
-            "MDM_SERVICE_URL": "http://nginx_server/mdm_fake_url",
+            "MDM_SERVICE_URL": "http://fake_mdm",
             "MDM_SERVICE_TOKEN": "test_componentx_service_token",
             "MDM_GID_SERVICE_HMAC": null
         }
