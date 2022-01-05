@@ -4,7 +4,7 @@ services:
     nginx_server:
         image: nginx
         ports:
-            - 8020:80
+            - 80:80
         volumes:
             - ./settings_resolver:/usr/share/nginx/html
             - ./nginx.conf:/etc/nginx/conf.d/default.conf
@@ -184,7 +184,7 @@ services:
 
             #APP_URL: 
             #APP_HTTP_PROTOCOL: http
-            #APP_STATIC_URL: /common/static/
+            #APP_STATIC_URL: /common/static
      
 networks:
     default:
