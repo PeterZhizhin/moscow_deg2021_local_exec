@@ -1,0 +1,35 @@
+networks:
+  - host: "127.0.0.1"
+    ssl: false
+    public-api-port: 8000
+    private-api-port: 8004
+  - host: "127.0.0.1"
+    ssl: false
+    public-api-port: 8001
+    private-api-port: 8005
+  - host: "127.0.0.1"
+    ssl: false
+    public-api-port: 8002
+    private-api-port: 8006
+  - host: "127.0.0.1"
+    ssl: false
+    public-api-port: 8003
+    private-api-port: 8007
+
+deadline_height: 10000
+supervisor_mode: "simple"
+
+artifacts:
+    dit-actual-ballots-service:
+        runtime: rust
+        name: "dit-actual-ballots-service"
+        version: "1.0.0"
+        action: "none"
+
+instances:
+    actual_ballots_service:
+        artifact: dit-actual-ballots-service
+        action: "config"
+        config:
+            api_public_keys:
+                - "f5d824aca5423c145125186d79e9f6a44100158faa02ee162dc75b1e54bc9409"

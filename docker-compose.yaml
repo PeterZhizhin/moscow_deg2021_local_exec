@@ -70,6 +70,48 @@ services:
         depends_on:
             - postgres
 
+    blockchain_public:
+        command: /bin/bash -c "/launch.sh"
+        build:
+            context: ./deg_codebase/blockchain/dit-blockchain-source
+            dockerfile: ${PWD}/rust_env/Dockerfile
+        volumes:
+            - ./rust_env/launch.sh:/launch.sh
+            - ./rust_env/public_blockchain_config.yaml:/launch_config.yaml
+            - ./storage/dit_public_blockchain:/storage
+        ports:
+            - 9000:8000
+            - 9001:8001
+            - 9002:8002
+            - 9003:8003
+            - 9004:8004
+            - 9005:8005
+            - 9006:8006
+            - 9007:8007
+        environment:
+            PROGRAM_NAME: dit-voting-blockchain
+
+    blockchain_private:
+        command: /bin/bash -c "/launch.sh"
+        build:
+            context: ./deg_codebase/blockchain/dit-blockchain-private-source
+            dockerfile: ${PWD}/rust_env/Dockerfile
+        volumes:
+            - ./rust_env/launch.sh:/launch.sh
+            - ./rust_env/private_blockchain_config.yaml:/launch_config.yaml
+            - ./storage/dit_private_blockchain:/storage
+        ports:
+            - 9100:8000
+            - 9101:8001
+            - 9102:8002
+            - 9103:8003
+            - 9104:8004
+            - 9105:8005
+            - 9106:8006
+            - 9107:8007
+        environment:
+            PROGRAM_NAME: dit-voting-blockchain-private
+
     base_deg_php_not_service:
         build:
             context: ./php_env
