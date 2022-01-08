@@ -1,0 +1,13 @@
+{
+  "name": "blockchain_connector_server",
+  "version": "1.0.0",
+  "description": "Server that pushes transactions to the public blockchain",
+  "main": "index.js",
+  "dependencies": {
+    "blockchain-connector": "file:../../deg_codebase/blockchain/frontend-library-source/blockchain-connector",
+    "dotenv": "^10.0.0",
+    "dotenv-expand": "^5.1.0",
+    "express": "^4.17.2",
+    "nodemon": "^2.0.15"
+  }
+}

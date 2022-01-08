@@ -6,7 +6,6 @@ services:
         ports:
             - 80:80
         volumes:
-            - ./settings_resolver:/usr/share/nginx/html
             - ./nginx.conf:/etc/nginx/conf.d/default.conf
         depends_on:
             - fake_sudir
@@ -70,6 +69,104 @@ services:
         depends_on:
             - postgres
 
+    blockchain_public:
+        command: /bin/bash -c "/launch.sh"
+        build:
+            context: ./deg_codebase/blockchain/dit-blockchain-source
+            dockerfile: ${PWD}/rust_env/Dockerfile
+        volumes:
+            - ./rust_env/launch.sh:/launch.sh
+            - ./rust_env/public_blockchain_config.yaml:/launch_config.yaml
+            - ./storage/dit_public_blockchain:/storage
+        ports:
+            - 9000:8000
+            - 9001:8001
+            - 9002:8002
+            - 9003:8003
+            - 9004:8004
+            - 9005:8005
+            - 9006:8006
+            - 9007:8007
+        environment:
+            PROGRAM_NAME: dit-voting-blockchain
+
+    blockchain_public_explorer:
+        build: ./blockchain_explorer
+        ports:
+            - 3000:80
+        environment:
+            PUBLIC_API: http://blockchain_public:8000
+            PRIVATE_API: http://blockchain_public:8004
+
+
+    blockchain_private:
+        command: /bin/bash -c "/launch.sh"
+        build:
+            context: ./deg_codebase/blockchain/dit-blockchain-private-source
+            dockerfile: ${PWD}/rust_env/Dockerfile
+        volumes:
+            - ./rust_env/launch.sh:/launch.sh
+            - ./rust_env/private_blockchain_config.yaml:/launch_config.yaml
+            - ./storage/dit_private_blockchain:/storage
+        ports:
+            - 9100:8000
+            - 9101:8001
+            - 9102:8002
+            - 9103:8003
+            - 9104:8004
+            - 9105:8005
+            - 9106:8006
+            - 9107:8007
+        environment:
+            PROGRAM_NAME: dit-voting-blockchain-private
+
+    blockchain_private_explorer:
+        build: ./blockchain_explorer
+        ports:
+            - 3100:80
+        environment:
+            PUBLIC_API: http://blockchain_private:8000
+            PRIVATE_API: http://blockchain_private:8004
+
+    blockchain_proxy:
+        build:
+            context: .
+            dockerfile: ./fake_blockchain_connector/blockchain_proxy/Dockerfile
+        ports:
+            - 8021:80
+        depends_on:
+            - blockchain_public
+        environment:
+            API_URL: http://blockchain_public:8000
+            LISTEN_PORT: 80
+
+    fake_arm:
+        build: ./fake_arm
+        volumes:
+            - ./storage/fake_arm:/app/database
+        ports:
+            - 8022:80
+        depends_on:
+            - blockchain_proxy
+        environment:
+            BLOCKCHAIN_PROXY_URI: http://blockchain_proxy
+
+    blockchain_votes_processor:
+        build: ./fake_blockchain_connector/blockchain_votes_processor
+        ports:
+            - 8024:80
+        depends_on:
+            - fake_arm
+            - blockchain_proxy
+            - rabbit_mq
+            - deg_encryptor
+        environment:
+            BLOCKCHAIN_PROXY_URI: http://blockchain_proxy/process_vote
+            ARM_VOITING_URL: "http://fake_arm/arm/config?empty_ok=true"
+            LISTEN_PORT: 80
+            RABBIT_MQ_HOSTNAME: rabbit_mq
+            ENCRYPTOR_URL: http://deg_encryptor:8001
+
     base_deg_php_not_service:
         build:
             context: ./php_env
@@ -103,10 +200,11 @@ services:
             - fake_mdm
             - redis
             - nginx_server
+            - fake_arm
         environment:
             REDIS_HOST: redis
             ENCRYPTOR_GID_HOST: http://deg_encryptor:8001
-            ARM_VOITING_URL: http://nginx_server/html/componentX_config.json
+            ARM_VOITING_URL: http://fake_arm/arm/config
 
     deg_ballot:
         # Раскомментировать для миграций после инициализации PostgreSQL
@@ -128,6 +226,7 @@ services:
             - postgres
             - redis
             - rabbit_mq
+            - fake_arm
         environment:
             REDIS_HOST: redis
             DB_HOST: postgres
@@ -136,8 +235,8 @@ services:
 
             ENCRYPTOR_GID_HOST: http://deg_encryptor:8001
             ENCRYPTOR_HOST: http://deg_encryptor:8001
-            ARM_VOITING_URL: http://nginx_server/html/ballot_config.json
-            ARM_VOITING_REF: http://nginx_server/html/
+            ARM_VOITING_URL: http://fake_arm/arm/config
+            ARM_VOITING_REF: http://fake_arm/arm/
 
             APP_URL: http://${HOSTNAME:-localhost}/anon_zone/
             APP_HTTP_PROTOCOL: http
@@ -161,6 +260,7 @@ services:
             - deg_ballot
             - deg_componentx
             - redis
+            - fake_arm
         environment:
             REDIS_HOST: redis
             DB_HOST: postgres
@@ -176,8 +276,8 @@ services:
             BALLOT_EXTERNAL_PORT: ""
             BALLOT_GET_GUID_URL: http://deg_ballot:8003/ballot/getGuid
 
-            ARM_VOITING_URL: http://nginx_server/html/ballot_config.json
-            ARM_VOITING_REF: http://nginx_server/html/
+            ARM_VOITING_URL: http://fake_arm/arm/config
+            ARM_VOITING_REF: http://fake_arm/arm/
 
             SUDIR_LOGIN_URL: /oauth/authorize
             SUDIR_TOKEN_URL: http://fake_sudir/oauth/token

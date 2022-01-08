@@ -1,0 +1,40 @@
+{
+    "STATUS": 3,
+    "ID": "insert voting id here",
+    "EXT_ID": "insert external (blockchain) voting id here",
+    "TITLE": "Fake title for ballot config",
+    "SHORT_TITLE": "Short fake title for ballot config",
+    "REF": "gd",
+    "PUBLIC_KEY": "insert encryption public key here",
+    "START_TIME": "2021-12-30",
+    "END_TIME": "2022-01-30",
+    "CREATE_DATE": "2021-12-25",
+    "UPDATED_DATE": "2021-12-26",
+    "APPROVED": 1,
+    "IS_TEST": 1,
+    "IS_REVOKE": 0,
+    "MULTI_VOTE": 0,
+    "MIN_COUNT_VOTE": 1,
+    "MAX_COUNT_VOTE": 1,
+    "BALLOT": {},
+    "FORM": {
+        "url": null,
+        "rules": null,
+        "manual": null,
+        "about": null,
+        "agreement": null,
+        "buttonName": null,
+        "errorMessage": null,
+        "messageBeforeVote": null
+    },
+    "LANDING": {
+        "url": null,
+        "buttonName": null,
+        "text": null
+    },
+    "MDM_SERVICE_URL": "http://fake_mdm",
+    "MDM_SERVICE_TOKEN": "test_componentx_service_token",
+    "MDM_GID_SERVICE_HMAC": null,
+    "MDM_GID_SERVICE_URL": "http://fake_mdm/generate_gid",
+    "MDM_GID_SERVICE_TOKEN": "test_componentx_service_token"
+}

@@ -62,6 +62,17 @@ def get_response(return_code):
     return signature
 
 
+# These two methods are just to have a fake election with no voters in fake_arm response.
+@app.route('/failing/checkBallot', methods=["POST"])
+def check_ballot_fail():
+    return {'code': app.config["USER_HAS_NO_ACCESS_CODE"]}
+
+
+@app.route('/failing/getBallot', methods=["POST"])
+def get_ballot_fail():
+    return {'code': app.config["USER_HAS_NO_ACCESS_CODE"]}
+
+
 @app.route('/checkBallot', methods=["POST"])
 @token_required
 def check_ballot():
