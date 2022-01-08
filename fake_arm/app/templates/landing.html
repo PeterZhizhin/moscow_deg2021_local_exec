@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+
+<html>
+<body>
+
+<a href="/arm/create_voting">Create voting</a>
+
+{% if votings %}
+<p>Available votings:</p>
+{% for voting in votings %}
+    <a href="/arm/voting/{{ voting.id }}">Voting {{ voting.id }}</a>
+{% endfor %}
+{% endif %}
+
+</body>
+</html>

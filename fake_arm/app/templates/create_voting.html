@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script type="text/javascript">
+        function delete_ballot(ballotId) {
+            $(`#ballot_${ballotId}`).remove();
+        }
+
+        const ballotTemplate = (ballotId) => {
+            return `<fieldset id="ballot_${ballotId}">
+                <legend>Ballot ${ballotId}</legend>
+
+                <label for="district_${ballotId}">District:</label>
+                <input id="district_${ballotId}" name="district_${ballotId}" type="number" value="198" required><br>
+
+                <label for="question_${ballotId}">Question:</label>
+                <input id="question_${ballotId}" name="question_${ballotId}" type="text" value="За кого голосуем?" required><br>
+
+                <label for="candidates_${ballotId}">Candidates (one by line):</label><br>
+                <textarea id="candidates_${ballotId}" name="candidates_${ballotId}" cols="30" rows="10" required></textarea><br>
+
+                <button type="button" onclick="delete_ballot(${ballotId})">Remove this ballot</button>
+            </fieldset>`;
+        };
+
+        $(document).ready(function() {
+            var ballotsDiv = $('#ballots');
+            var ballotsCount = 0;
+            $('#add_new_ballot_button').click(function(e) {
+                e.preventDefault();
+                const template = ballotTemplate(ballotsCount++);
+                $(ballotsDiv).append(template);
+            });
+        });
+    </script>
+</head>
+<body>
+
+<h2>Create voting</h2>
+<form id="create_voting_form" method="POST">
+    <fieldset>
+        <legend>Common parameters</legend>
+        <label for="public_key">Public encryption key:</label>
+        <input id="public_key" name="public_key" type="text" required><br>
+    </fieldset>
+
+    <button id="add_new_ballot_button" type="button">Add new ballot</button>
+    <div id="ballots"></div>
+
+    <input type="submit" value="Create voting">
+</form>
+
+</body>
+</html>

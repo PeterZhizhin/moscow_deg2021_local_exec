@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+
+<html>
+<body>
+
+<h1>Voting {{ voting.id }}</h1>
+
+<h2>State {{ voting_state }}</h2>
+
+{% if voting_state == "Registration" %}
+    <a href="/arm/stop_registration/{{ voting.id }}">Stop registration</a>
+{% endif %}
+
+<p>External voting id: {{ voting.external_voting_id }}</p>
+<p>Public key: {{ voting.public_key }}</p>
+<p>Private key: {{ voting.private_key }}</p>
+
+<p>Ballots</p>
+
+<div>
+    {% for ballot in voting.ballots %}
+        <p>Ballot: {{ ballot.id }}</p>
+        <p>District: {{ ballot.district }}</p>
+        <p>Question: {{ ballot.question }}</p>
+
+        <p>Candidates:</p>
+        {% for candidate in ballot.candidates %}
+            <p>Candidate: {{ candidate.id }}</p>
+            <p>First name: {{ candidate.first_name }}</p>
+            <p>Last name: {{ candidate.last_name }}</p>
+            <p>Middle name: {{ candidate.middle_name }}</p>
+        {% endfor %}
+    {% endfor %}
+</div>
+
+</body>
+</html>

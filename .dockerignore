@@ -1,0 +1,9 @@
+.git
+deg_codebase/.git
+
+**/node_modules
+**/venv
+
+storage
+fake_arm/app/database
+fake_sudir/app/website/database

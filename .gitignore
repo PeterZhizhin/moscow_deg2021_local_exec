@@ -7,6 +7,10 @@ fake_sudir/venv
 fake_sudir/app/website/database/db.sqlite
 fake_mdm/venv
 
+**/venv
+**/__pycache__
+**/node_modules
+
 fake_mdm/__pycache__
 fake_mdm/app/__pycache__
 fake_sudir/app/website/__pycache__
