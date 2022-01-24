@@ -10,6 +10,7 @@ services:
         depends_on:
             - fake_sudir
             - fake_mdm
+            - deg_ballot
     fake_mdm:
         build: ./fake_mdm
 
@@ -19,6 +20,15 @@ services:
             - ./storage/fake_sudir_db:/app/website/database
         environment:
             AUTHLIB_INSECURE_TRANSPORT: 1
+            TELEGRAM_BOT_SECRET: "telegram_bot_secret"
+            TELEGRAM_BOT_TOKEN: "5169476806:AAFOE57kMgBpXAPFmjRmRz-cMnkH3HihyiA"
+
+    fake_sudir_bot:
+        build: ./fake_sudir_bot
+        command: python /app/bot.py
+        environment:
+            TELEGRAM_BOT_TOKEN: "5169476806:AAFOE57kMgBpXAPFmjRmRz-cMnkH3HihyiA"
+            TELEGRAM_BOT_SECRET: "telegram_bot_secret"
 
     rabbit_mq:
         ports:
@@ -282,7 +292,9 @@ services:
             SUDIR_LOGIN_URL: /oauth/authorize
             SUDIR_TOKEN_URL: http://fake_sudir/oauth/token
             SUDIR_USER_DATA_URL: http://fake_sudir/api/me
+            SUDIR_SEND_TELEGRAM_MESSAGE_URL: http://fake_sudir/oauth/tg/send_message
+            TELEGRAM_BOT_SECRET: "telegram_bot_secret"
 
-            #APP_URL: 
+            #APP_URL:
             #APP_HTTP_PROTOCOL: http
             #APP_STATIC_URL: /common/static
