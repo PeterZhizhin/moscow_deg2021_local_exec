@@ -20,6 +20,8 @@ class User(db.Model):
     mail = db.Column(db.String(40), unique=False)
     mobile = db.Column(db.String(40), unique=False)
 
+    telegram_code = db.relationship("TelegramCode", back_populates="user", uselist=False)
+
     def __str__(self):
         return self.username
 
@@ -64,3 +66,19 @@ class OAuth2Token(db.Model, OAuth2TokenMixin):
             return False
         expires_at = self.issued_at + self.expires_in * 2
         return expires_at >= time.time()
+
+
+class TelegramCode(db.Model):
+    __tablename__ = 'telegram_code'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(
+        db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'))
+    user = db.relationship('User')
+
+    code = db.Column(db.String(6), unique=False)
+    checked = db.Column(db.Boolean, unique=False)
+
+    issued_at = db.Column(db.DateTime, unique=False)
+    expires_at = db.Column(db.DateTime, unique=False)
+    reissue_available_at = db.Column(db.DateTime, unique=False)
