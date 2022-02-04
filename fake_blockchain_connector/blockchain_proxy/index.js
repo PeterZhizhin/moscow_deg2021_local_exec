@@ -2,6 +2,7 @@ var express = require('express');
 var blockchainConnector = require('blockchain-connector');
 var dotenv = require('dotenv');
 var dotenvExpand = require('dotenv-expand');
+var privateTransactions = require('./private-blockchain-transactions');
 
 
 // Read the .env file and expand environment variables inside .env
@@ -14,6 +15,11 @@ var apiPrivateKey = process.env.API_PRIVATE_KEY;
 var connector = new blockchainConnector.BlockchainConnector(apiUrl);
 var apiAccount = blockchainConnector.AccountBuilder.createAccountFromSecretKey(apiPrivateKey);
 
+var privateApiUrl = process.env.PRIVATE_API_URL;
+var privateApiPrivateKey = process.env.PRIVATE_API_PRIVATE_KEY;
+
+var privateConnector = new blockchainConnector.BlockchainConnector(privateApiUrl);
+var privateApiAccount = blockchainConnector.AccountBuilder.createAccountFromSecretKey(privateApiPrivateKey);
 
 var app = express();
 app.use(express.json());
@@ -52,6 +58,9 @@ app.post('/create_voting', function (req, res) {
         votingId = txHash;
         return createVotingTx.waitResult();
     }).then((unusedTxStatus) => {
+	var createActualBallotsStorageTx = privateTransactions.createActualBallotsStorage(privateApiAccount, {voting_id: votingId});
+	return createActualBallotsStorageTx.send(privateConnector);
+    }).then((unusedPrivateTxHash) => {
         res.json({voting_id: votingId});
     }).catch((error) => {
         console.log(error);
@@ -60,6 +69,7 @@ app.post('/create_voting', function (req, res) {
 });
 
 app.post('/process_vote', function (req, res) {
+    console.log(req.body);
     var voterAddress = req.body["voterAddress"];
     var rawTx = req.body["tx"];
     var votingId = req.body["votingId"];
@@ -70,7 +80,11 @@ app.post('/process_vote', function (req, res) {
         voter_key: voterAddress,
     });
 
+    const voteDateTime = parseInt(parseFloat(req.body["voteDateTime"]) * 1000000);
+
     var addVoterKeyTxHash = null;
+    var txStoreBallotHash = null;
+    var storeGroupedTxHash = null;
     addVoterKeyTx.send(connector).then((txHash) => {
         console.log(`Got TxAddVoterKey response with hash: ${txHash}`);
         addVoterKeyTxHash = txHash;
@@ -78,9 +92,26 @@ app.post('/process_vote', function (req, res) {
     }).then((txResultInfo) => {
         console.log(`TxAddVoterKey waited, submitting raw vote tx`);
         return connector.sendRawTransaction(rawTx);
-    }).then((txStoreBallotHash) => {
+    }).then((txHash) => {
+	txStoreBallotHash = txHash;
+	storeGroupedTxHash = privateTransactions.storeGroupedTxHash(privateApiAccount, {
+	  voting_id: votingId,
+	  store_tx_hash: txStoreBallotHash,
+	  encrypted_group_id: req.body["encryptedGroupId"],
+	  ts: voteDateTime,
+	});
+	console.log(`Sending TxStoreGroupedTxHash transaction to private blockchain`);
+	console.log(storeGroupedTxHash);
+	return storeGroupedTxHash.send(privateConnector);
+    }).then((txHash) => {
+	console.log(`Waiting on private blockchain ${txHash}`);
+	return storeGroupedTxHash.waitResult();
+    }).then((txResultInfo) => {
+	console.log(txResultInfo);
         res.json({"txStoreBallotHash": txStoreBallotHash, "txAddVoterKeyHash": addVoterKeyTxHash});
     }).catch((error) => {
+	console.log("Error:");
+	console.log(error);
         res.status(500).send({
             "error": `Got error when processing request:\n${error}`
         });
@@ -88,6 +119,6 @@ app.post('/process_vote', function (req, res) {
 });
 
 
-app.listen(process.env.LISTEN_PORT, () => {
+app.listen(process.env.LISTEN_PORT, '0.0.0.0', () => {
     console.log(`Server listening at port ${process.env.LISTEN_PORT}`);
 });
