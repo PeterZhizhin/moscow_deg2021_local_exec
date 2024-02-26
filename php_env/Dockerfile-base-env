@@ -18,7 +18,7 @@ RUN docker-php-ext-install pdo pdo_pgsql pgsql sockets
 RUN docker-php-ext-enable redis swoole pgsql pdo pdo_pgsql sockets
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
-COPY wait-for-rabbit-mq.sh /
+COPY wait-and-create-dependencies.sh /
 
 RUN apt-get install -y netcat
 

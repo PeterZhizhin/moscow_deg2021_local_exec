@@ -1,6 +1,6 @@
 import os
 
-SQLALCHEMY_DATABASE_URI = "sqlite:///database/db.sqlite"
+SQLALCHEMY_DATABASE_URI = "sqlite:///" + os.path.join(os.getcwd(), 'database', 'db.sqlite')
 
 BLOCKCHAIN_PROXY_URI = os.environ.get("BLOCKCHAIN_PROXY_URI", "http://localhost:8021")
 
