@@ -70,9 +70,6 @@ class Candidate(db.Model):
     ballot_id = db.Column(db.Integer, db.ForeignKey("ballot.id"), nullable=False)
 
 
-@app.before_first_request
-def before_first_request():
-    db.create_all()
 
 
 @app.errorhandler(Exception)
@@ -175,6 +172,13 @@ def _create_voting_relations(public_key, external_voting_id, ballots):
     db.session.add(voting)
     db.session.commit()
     return voting
+
+
+@app.route("/arm/refresh_caches", methods=["GET"])
+def refresh_caches():
+    _refresh_deg_caches()
+    return "SUCCESS"
+
 
 
 @app.route("/arm/create_voting", methods=["GET", "POST"])
@@ -285,6 +289,9 @@ def gd_district_config():
         result[ballot.district] = {"100": "uik_name|1348|uik_address|88005553535"}
     return {"result": result}
 
+
+with app.app_context():
+    db.create_all()
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=80)

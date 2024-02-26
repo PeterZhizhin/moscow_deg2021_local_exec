@@ -65,13 +65,13 @@ def setup_app(app):
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.DEBUG
     )
 
+    db.init_app(app)
+
     # Create tables if they do not exist already
-    @app.before_first_request
-    def create_tables():
+    with app.app_context():
         # Uncomment the next line for clean start.
         # db.drop_all()
         db.create_all()
         create_db_elements()
-    db.init_app(app)
     config_oauth(app)
     app.register_blueprint(bp, url_prefix='')

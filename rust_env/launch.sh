@@ -35,6 +35,8 @@ do
   sleep 1
 done
 
+sleep 10
+
 echo "Changing config public_api_keys"
 python3 -m exonum_launcher -i /launch_config.yaml
 

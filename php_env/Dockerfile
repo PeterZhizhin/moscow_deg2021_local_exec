@@ -12,4 +12,4 @@ RUN mkdir /app/storage \
 && mkdir /app/storage/framework/smarty \
 && mkdir /app/storage/framework/views
 
-CMD ["/wait-for-rabbit-mq.sh", "php", "/app/artisan", "swoole:http", "start"]
+CMD ["/wait-and-create-dependencies.sh", "php", "/app/artisan", "swoole:http", "start"]
