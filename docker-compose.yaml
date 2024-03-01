@@ -249,7 +249,7 @@ services:
 
             ENCRYPTOR_GID_HOST: http://deg_encryptor:8001
             ENCRYPTOR_HOST: http://deg_encryptor:8001
-            ARM_VOITING_URL: http://fake_arm/arm/config
+            ARM_VOITING_URL: "http://fake_arm/arm/config?empty_ok=true"
             ARM_VOITING_REF: http://fake_arm/arm/
 
             APP_URL: http://${HOSTNAME:-localhost}/anon_zone/
