@@ -20,7 +20,9 @@ class User(db.Model):
     mail = db.Column(db.String(40), unique=False)
     mobile = db.Column(db.String(40), unique=False)
 
-    telegram_code = db.relationship("TelegramCode", back_populates="user", uselist=False)
+    telegram_code = db.relationship(
+        "TelegramCode", back_populates="user", uselist=False
+    )
 
     def __str__(self):
         return self.username
@@ -29,37 +31,34 @@ class User(db.Model):
         return self.id
 
     def check_password(self, password):
-        return password == 'valid'
+        return password == "valid"
 
 
 class OAuth2Client(db.Model, OAuth2ClientMixin):
-    __tablename__ = 'oauth2_client'
+    __tablename__ = "oauth2_client"
 
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(
-        db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'))
-    user = db.relationship('User')
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id", ondelete="CASCADE"))
+    user = db.relationship("User")
 
     def check_redirect_uri(self, redirect_uri):
         return True
 
 
 class OAuth2AuthorizationCode(db.Model, OAuth2AuthorizationCodeMixin):
-    __tablename__ = 'oauth2_code'
+    __tablename__ = "oauth2_code"
 
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(
-        db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'))
-    user = db.relationship('User')
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id", ondelete="CASCADE"))
+    user = db.relationship("User")
 
 
 class OAuth2Token(db.Model, OAuth2TokenMixin):
-    __tablename__ = 'oauth2_token'
+    __tablename__ = "oauth2_token"
 
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(
-        db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'))
-    user = db.relationship('User')
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id", ondelete="CASCADE"))
+    user = db.relationship("User")
 
     def is_refresh_token_active(self):
         if self.revoked:
@@ -69,12 +68,11 @@ class OAuth2Token(db.Model, OAuth2TokenMixin):
 
 
 class TelegramCode(db.Model):
-    __tablename__ = 'telegram_code'
+    __tablename__ = "telegram_code"
 
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(
-        db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'))
-    user = db.relationship('User')
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id", ondelete="CASCADE"))
+    user = db.relationship("User")
 
     code = db.Column(db.String(6), unique=False)
     checked = db.Column(db.Boolean, unique=False)

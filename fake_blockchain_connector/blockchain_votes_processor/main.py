@@ -32,7 +32,8 @@ async def decrypt_message(message_str):
         },
     ) as session:
         async with session.get(
-            "/api/encryption/decrypt", params={"data[base64body]": message_str},
+            "/api/encryption/decrypt",
+            params={"data[base64body]": message_str},
             raise_for_status=True,
         ) as resp:
             return await resp.json()
@@ -40,7 +41,9 @@ async def decrypt_message(message_str):
 
 async def send_message_to_proxy(message):
     async with aiohttp.ClientSession() as session:
-        async with session.post(config.BLOCKCHAIN_PROCESS_VOTE_URI, raise_for_status=True, json=message) as resp:
+        async with session.post(
+            config.BLOCKCHAIN_PROCESS_VOTE_URI, raise_for_status=True, json=message
+        ) as resp:
             return await resp.json()
 
 
@@ -60,7 +63,7 @@ async def receive_message(message: aio_pika.IncomingMessage, voting_id: str):
         decrypted_message_json["votingId"] = voting_id
 
         proxy_response = await send_message_to_proxy(decrypted_message_json)
-        logger.info(f'Got response from proxy: {proxy_response}')
+        logger.info(f"Got response from proxy: {proxy_response}")
 
 
 async def main():
@@ -73,18 +76,20 @@ async def main():
         )
 
         queue_ids = await get_queues_ids()
-        logger.info(f'Configuring queues: {queue_ids}')
+        logger.info(f"Configuring queues: {queue_ids}")
         async with connection:
             channel = await connection.channel()
-            
+
             for queue_key, voting_id in queue_ids.items():
-                queue_name = f'{config.BASE_LISTEN_QUEUE_NAME}-{queue_key}'
+                queue_name = f"{config.BASE_LISTEN_QUEUE_NAME}-{queue_key}"
                 queue = await channel.get_queue(queue_name, ensure=False)
 
                 async def receive_message_partial(x):
                     return await receive_message(x, voting_id)
 
-                logger.info(f"Starting consuming on queue {queue_name} (voting_id: {voting_id}).")
+                logger.info(
+                    f"Starting consuming on queue {queue_name} (voting_id: {voting_id})."
+                )
                 await queue.consume(receive_message_partial)
 
             logger.info("All queues are listening.")
@@ -94,7 +99,7 @@ async def main():
         logger.error(e, exc_info=True)
         raise
     finally:
-        logger.info('Stopping connection, deleting queue listening')
+        logger.info("Stopping connection, deleting queue listening")
 
 
 class BlockchainConnector:
@@ -119,15 +124,17 @@ class BlockchainConnector:
 
 routes = aiohttp.web.RouteTableDef()
 
-@routes.get('/blockchain_connector/refresh')
+
+@routes.get("/blockchain_connector/refresh")
 async def refresh_queues(unused_request):
-    logger.info('Recreating queues')
+    logger.info("Recreating queues")
     BlockchainConnector.recreate()
-    return aiohttp.web.Response(text='ok')
+    return aiohttp.web.Response(text="ok")
 
 
 async def start_queues(unused_app):
     BlockchainConnector.get_instance()
+
 
 app = aiohttp.web.Application()
 app.add_routes(routes)

@@ -16,12 +16,18 @@ from venv import create
 import requests
 
 from telegram import Update, ForceReply, User as TgUser
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
+from telegram.ext import (
+    Updater,
+    CommandHandler,
+    MessageHandler,
+    Filters,
+    CallbackContext,
+)
 
 # Enable logging
 
 logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.DEBUG
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.DEBUG
 )
 
 logger = logging.getLogger(__name__)
@@ -31,13 +37,27 @@ USER_KEYS = ["id", "first_name", "last_name", "middle_name", "mobile", "mail"]
 
 MALE_NAMES = [
     ["Александр", "Сергей", "Дмитрий", "Андрей", "Алексей", "Максим"],
-    ["Александрович", "Сергеевич", "Дмитриевич", "Андреевич", "Алексеевич", "Максимович"],
+    [
+        "Александрович",
+        "Сергеевич",
+        "Дмитриевич",
+        "Андреевич",
+        "Алексеевич",
+        "Максимович",
+    ],
     ["Александров", "Сергеев", "Дмитриев", "Андреев", "Алексеев", "Максимов"],
 ]
 
 FEMALE_NAMES = [
     ["Елена", "Ольга", "Наталья", "Екатерина", "Анна", "Татьяна"],
-    ["Александровна", "Сергеевна", "Дмитриевна", "Андреевна", "Алексеевна", "Максимовна"],
+    [
+        "Александровна",
+        "Сергеевна",
+        "Дмитриевна",
+        "Андреевна",
+        "Алексеевна",
+        "Максимовна",
+    ],
     ["Александрова", "Сергеева", "Дмитриева", "Андреева", "Алексеева", "Максимова"],
 ]
 
@@ -48,8 +68,8 @@ def start(update: Update, context: CallbackContext) -> None:
     """Send a message when the command /start is issued."""
     user = update.effective_user
     update.message.reply_markdown_v2(
-        f'Hi {user.mention_markdown_v2()}\\!\n'
-        f'Use /register command to register for fake election',
+        f"Hi {user.mention_markdown_v2()}\\!\n"
+        f"Use /register command to register for fake election",
     )
 
 
@@ -97,8 +117,8 @@ def register(update: Update, context: CallbackContext) -> None:
     rsp = requests.post(fake_sudir_url + "/oauth/tg/register", data=user_dict)
     if rsp.status_code == 200:
         update.message.reply_text(
-            f'Registration complete.\n'
-            f'I have generated a random account for you.\n'
+            f"Registration complete.\n"
+            f"I have generated a random account for you.\n"
             f'Use your "mobile" to login for the election\n'
             f'  mobile: {user_dict["mobile"]}\n'
             f'  mail: {user_dict["mail"]}\n'
@@ -107,12 +127,12 @@ def register(update: Update, context: CallbackContext) -> None:
             f'  last name: {user_dict["last_name"]}'
         )
     else:
-        update.message.reply_text(f'Registration request failed:\n{rsp.content}')
+        update.message.reply_text(f"Registration request failed:\n{rsp.content}")
 
 
 def help_command(update: Update, context: CallbackContext) -> None:
     """Send a message when the command /help is issued."""
-    update.message.reply_text('Help!')
+    update.message.reply_text("Help!")
 
 
 def echo(update: Update, context: CallbackContext) -> None:
@@ -125,7 +145,7 @@ def echo(update: Update, context: CallbackContext) -> None:
 def main() -> None:
     """Start the bot."""
     # Create the Updater and pass it your bot's token.
-    token = os.environ.get('TELEGRAM_BOT_TOKEN')
+    token = os.environ.get("TELEGRAM_BOT_TOKEN")
     updater = Updater(token)
 
     # Get the dispatcher to register handlers
@@ -148,5 +168,5 @@ def main() -> None:
     updater.idle()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

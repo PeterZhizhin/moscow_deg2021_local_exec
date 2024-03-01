@@ -29,12 +29,12 @@ USER_KEYS = ["id", "first_name", "last_name", "middle_name", "mobile", "mail"]
 
 logger = logging.getLogger(__name__)
 
-bp = Blueprint('home', __name__)
+bp = Blueprint("home", __name__)
 
 
 def current_user():
-    if 'id' in session:
-        uid = session['id']
+    if "id" in session:
+        uid = session["id"]
         return User.query.get(uid)
     return None
 
@@ -44,7 +44,7 @@ def split_by_crlf(s):
 
 
 def generate_code():
-    return ''.join(secrets.choice(string.digits) for _ in range(6))
+    return "".join(secrets.choice(string.digits) for _ in range(6))
 
 
 def create_telegram_code():
@@ -65,7 +65,7 @@ def maybe_send_code(user: User) -> None:
     db.session.add(user.telegram_code)
     db.session.commit()
 
-    bot = telegram.Bot(os.environ.get('TELEGRAM_BOT_TOKEN'))
+    bot = telegram.Bot(os.environ.get("TELEGRAM_BOT_TOKEN"))
     code = user.telegram_code.code
     bot.send_message(
         chat_id=user.id,
@@ -89,19 +89,22 @@ def validate_code_is_correct(user: User, entered_code: str) -> None:
         abort(401, "Wrong code")
 
 
-@bp.route('/oauth/register', methods=('GET', 'POST'))
+@bp.route("/oauth/register", methods=("GET", "POST"))
 def home():
-    if request.method == 'POST':
-        username = request.form.get('mobile')
+    if request.method == "POST":
+        username = request.form.get("mobile")
         username = username.replace("-", "").replace("+", "")
         user = User.query.filter_by(username=username).first()
         if not user:
-            abort(404, "No such user, please register via the telegram bot: t.me/TestDeg123_bot")
+            abort(
+                404,
+                "No such user, please register via the telegram bot: t.me/TestDeg123_bot",
+            )
 
         maybe_send_code(user)
 
-        next_page = request.args.get('next') or "/"
-        return redirect(url_for('.enter_tg_code', next=next_page, mobile=user.mobile))
+        next_page = request.args.get("next") or "/"
+        return redirect(url_for(".enter_tg_code", next=next_page, mobile=user.mobile))
     else:
         user = current_user()
         if user:
@@ -109,47 +112,47 @@ def home():
         else:
             clients = []
 
-        return render_template('home.html', user=user, clients=clients)
+        return render_template("home.html", user=user, clients=clients)
 
 
-@bp.route('/oauth/enter_tg_code', methods=('GET', 'POST'))
+@bp.route("/oauth/enter_tg_code", methods=("GET", "POST"))
 def enter_tg_code():
     if request.method == "GET":
-        username = request.args.get('mobile')
+        username = request.args.get("mobile")
         user = User.query.filter_by(username=username).first()
         if not user:
             abort(400)
-        return render_template('enter_tg_code.html', user=user)
+        return render_template("enter_tg_code.html", user=user)
     else:
-        username = request.args.get('mobile')
+        username = request.args.get("mobile")
 
         user = User.query.filter_by(username=username).first()
         if not user:
             abort(400)
-        entered_code = request.form.get('tg_code')
+        entered_code = request.form.get("tg_code")
 
         validate_code_is_correct(user, entered_code)
 
         logger.debug(f"Telegram code is correct, logging {user.username} in")
         session["id"] = user.id
 
-        next_page = request.args.get('next', '/')
+        next_page = request.args.get("next", "/")
         return redirect(next_page)
 
 
-@bp.route('/oauth/logout')
+@bp.route("/oauth/logout")
 def logout():
-    del session['id']
-    return redirect('/election')
+    del session["id"]
+    return redirect("/election")
 
 
-@bp.route('/create_client', methods=('GET', 'POST'))
+@bp.route("/create_client", methods=("GET", "POST"))
 def create_client(user=None):
     user = current_user()
     if not user:
-        return redirect('/')
-    if request.method == 'GET':
-        return render_template('create_client.html')
+        return redirect("/")
+    if request.method == "GET":
+        return render_template("create_client.html")
 
     client_id = gen_salt(24)
     client_id_issued_at = int(time.time())
@@ -167,19 +170,19 @@ def create_client(user=None):
         "redirect_uris": split_by_crlf(form["redirect_uri"]),
         "response_types": split_by_crlf(form["response_type"]),
         "scope": form["scope"],
-        "token_endpoint_auth_method": form["token_endpoint_auth_method"]
+        "token_endpoint_auth_method": form["token_endpoint_auth_method"],
     }
     client.set_client_metadata(client_metadata)
 
-    if form['token_endpoint_auth_method'] == 'none':
-        client.client_secret = ''
+    if form["token_endpoint_auth_method"] == "none":
+        client.client_secret = ""
     else:
         client.client_secret = gen_salt(48)
 
     db.session.add(client)
     db.session.commit()
 
-    return redirect('/')
+    return redirect("/")
 
 
 # def canonize_dict(d: Dict, keys: List[str]) -> str:
@@ -194,6 +197,7 @@ def create_client(user=None):
 #     if not secrets.compare_digest(data["auth_hmac"], h.hexdigest()):
 #         abort(401)
 
+
 def validate_bot(token: str) -> None:
     correct_token = os.environ.get("TELEGRAM_BOT_SECRET")
     if not isinstance(token, str):
@@ -202,32 +206,39 @@ def validate_bot(token: str) -> None:
         abort(401)
 
 
-@bp.route('/oauth/tg/register', methods=['POST'])
+@bp.route("/oauth/tg/register", methods=["POST"])
 def tg_register():
     # validate_bot(request.form, USER_KEYS)
     validate_bot(request.form.get("token"))
 
-    id = request.form.get('id')
-    username = mobile = request.form.get('mobile')
-    mail = request.form.get('mail')
-    first_name = request.form.get('first_name')
-    last_name = request.form.get('last_name')
-    middle_name = request.form.get('middle_name')
+    id = request.form.get("id")
+    username = mobile = request.form.get("mobile")
+    mail = request.form.get("mail")
+    first_name = request.form.get("first_name")
+    last_name = request.form.get("last_name")
+    middle_name = request.form.get("middle_name")
 
     user = User.query.filter_by(id=id).first()
     if user:
         abort(400, "User is already registered")
 
     logger.debug(f"Registering user id={id}, username={username}")
-    user = User(username=username, first_name=first_name, last_name=last_name, middle_name=middle_name,
-                mail=mail, mobile=mobile, id=id)
+    user = User(
+        username=username,
+        first_name=first_name,
+        last_name=last_name,
+        middle_name=middle_name,
+        mail=mail,
+        mobile=mobile,
+        id=id,
+    )
     db.session.add(user)
     db.session.commit()
 
-    return json.dumps({'success':True}), 200, {'ContentType':'application/json'}
+    return json.dumps({"success": True}), 200, {"ContentType": "application/json"}
 
 
-@bp.route('/oauth/tg/send_message', methods=['POST'])
+@bp.route("/oauth/tg/send_message", methods=["POST"])
 def tg_send_message():
     params = request.json
     logger.debug(f"request: {params}")
@@ -239,8 +250,8 @@ def tg_send_message():
         logger.warning(f"User {username} not found")
         abort(404, f"User {username} not found")
 
-    bot = telegram.Bot(os.environ.get('TELEGRAM_BOT_TOKEN'))
-    message = params.get('message')
+    bot = telegram.Bot(os.environ.get("TELEGRAM_BOT_TOKEN"))
+    message = params.get("message")
     logger.debug(f"Sending message to user {user.username}: {message}")
     bot.send_message(
         chat_id=user.id,
@@ -248,39 +259,39 @@ def tg_send_message():
     )
 
 
-@bp.route('/oauth/authorize', methods=['GET', 'POST'])
+@bp.route("/oauth/authorize", methods=["GET", "POST"])
 def authorize():
     user = current_user()
     # if user log status is not true (Auth server), then to log it in
     if not user:
-        return redirect(url_for('.home', next=request.url))
+        return redirect(url_for(".home", next=request.url))
 
-    if request.method == 'GET':
+    if request.method == "GET":
         try:
             grant = authorization.get_consent_grant(end_user=user)
         except OAuth2Error as error:
             abort(401, error.error)
-        return render_template('authorize.html', user=user, grant=grant)
+        return render_template("authorize.html", user=user, grant=grant)
     else:
-        if request.form['confirm']:
+        if request.form["confirm"]:
             grant_user = user
         else:
             grant_user = None
         return authorization.create_authorization_response(grant_user=grant_user)
 
 
-@bp.route('/oauth/token', methods=['POST'])
+@bp.route("/oauth/token", methods=["POST"])
 def issue_token():
     return authorization.create_token_response()
 
 
-@bp.route('/oauth/revoke', methods=['POST'])
+@bp.route("/oauth/revoke", methods=["POST"])
 def revoke_token():
-    return authorization.create_endpoint_response('revocation')
+    return authorization.create_endpoint_response("revocation")
 
 
-@bp.route('/api/me')
-@require_oauth('profile')
+@bp.route("/api/me")
+@require_oauth("profile")
 def api_me():
     user = current_token.user
     return dict(
@@ -291,5 +302,5 @@ def api_me():
         mail=user.mail,
         mobile=user.mobile,
         trusted=True,
-        username=user.username
+        username=user.username,
     )
