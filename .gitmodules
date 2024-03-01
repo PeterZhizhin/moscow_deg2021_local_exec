@@ -1,3 +1,3 @@
 [submodule "deg_codebase"]
 	path = deg_codebase
-	url = git@github.com:PeterZhizhin/blockchain-voting_2021_extracted.git
+	url = https://github.com/PeterZhizhin/blockchain-voting_2021_extracted.git
