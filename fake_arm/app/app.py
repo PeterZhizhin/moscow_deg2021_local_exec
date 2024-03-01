@@ -28,12 +28,14 @@ def _refresh_deg_caches():
         try:
             requests.get(url, headers={"SYSTEM": system, "SYSTEM_TOKEN": token})
         except requests.exceptions.HTTPError as err:
-            app.logger.error(f"Got error when trying to refresh URL {url}: {err} {err.response.text}")
+            app.logger.error(
+                f"Got error when trying to refresh URL {url}: {err} {err.response.text}"
+            )
 
 
 def _generate_candidate_id(existing_ids=None):
     if existing_ids is None:
-        return random.randrange(2 ** 32)
+        return random.randrange(2**32)
     x = _generate_candidate_id()
     while x in existing_ids:
         x = _generate_candidate_id()
@@ -70,8 +72,6 @@ class Candidate(db.Model):
     ballot_id = db.Column(db.Integer, db.ForeignKey("ballot.id"), nullable=False)
 
 
-
-
 @app.errorhandler(Exception)
 def exc_handler(e=None):
     exc_message = traceback.format_exc()
@@ -98,7 +98,7 @@ def get_voting(voting_id):
         response.raise_for_status()
     except requests.exceptions.HTTPError as err:
         raise ValueError(f"Error from blockchain proxy:\n{err}\n{err.response.text}")
-    voting_state = response.json()['state']
+    voting_state = response.json()["state"]
     return render_template("get_voting.html", voting=voting, voting_state=voting_state)
 
 
@@ -115,7 +115,7 @@ def stop_registration(voting_id):
         response.raise_for_status()
     except requests.exceptions.HTTPError as err:
         raise ValueError(f"Error from blockchain proxy:\n{err}\n{err.response.text}")
-    return redirect(url_for('get_voting', voting_id=voting_id))
+    return redirect(url_for("get_voting", voting_id=voting_id))
 
 
 def _parse_candidates(candidates):
@@ -180,7 +180,6 @@ def refresh_caches():
     return "SUCCESS"
 
 
-
 @app.route("/arm/create_voting", methods=["GET", "POST"])
 def create_voting():
     if request.method == "GET":
@@ -240,7 +239,7 @@ def create_voting():
 
     _refresh_deg_caches()
 
-    return redirect(url_for('get_voting', voting_id=voting.id))
+    return redirect(url_for("get_voting", voting_id=voting.id))
 
 
 @app.route("/arm/config", methods=["GET"])
@@ -259,7 +258,7 @@ def config():
         current_config["PUBLIC_KEY"] = voting.public_key
         result.append(current_config)
 
-    if not result and not request.args.get('empty_ok'):
+    if not result and not request.args.get("empty_ok"):
         fake_config = copy.deepcopy(base_config)
         fake_config["MDM_SERVICE_URL"] = app.config["FAILING_MDM_URL"]
         result = [fake_config]
@@ -280,6 +279,7 @@ def gd_config():
             ] = f"{candidate.id}|{candidate.last_name}|{candidate.first_name}|{candidate.middle_name}|1900-01-01|fake_university|fake_faculty|fake_specialty|fake_logo|fake_photo|fake_description"
         result[district] = current_result
     return {"result": result}
+
 
 @app.route("/arm/gd_DISTRICT", methods=["GET"])
 def gd_district_config():
