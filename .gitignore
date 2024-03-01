@@ -11,6 +11,8 @@ fake_mdm/venv
 **/__pycache__
 **/node_modules
 
+**/*_pb2.py
+
 fake_mdm/__pycache__
 fake_mdm/app/__pycache__
 fake_sudir/app/website/__pycache__
