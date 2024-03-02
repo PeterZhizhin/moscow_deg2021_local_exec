@@ -19,3 +19,6 @@ ARM_VOITING_URL = os.environ.get(
 )
 
 LISTEN_PORT = int(os.environ.get("LISTEN_PORT", 8024))
+
+RE_ENCRYPTOR_LISTEN_PORT = int(os.environ.get("RE_ENCRYPTOR_LISTEN_PORT", 8025))
+RE_ENCRYPTOR_PRIVATE_KEY_HEX = os.environ.get("RE_ENCRYPTOR_PRIVATE_KEY_HEX")

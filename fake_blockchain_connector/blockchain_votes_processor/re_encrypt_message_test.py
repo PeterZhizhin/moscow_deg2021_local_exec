@@ -10,10 +10,10 @@ from exonum_modules.main import custom_types_pb2
 from exonum_modules.main.exonum import messages_pb2
 
 
-def _create_test_transaction_hex(
+def _create_test_transaction(
     skip_district: bool = False,
     skip_voting_id: bool = False,
-) -> str:
+) -> bytes:
     original_store_ballot_tx = transactions_pb2.TxStoreBallot(
         encrypted_choice=transactions_pb2.TxEncryptedChoice(
             encrypted_message=b"some_fake_data",
@@ -37,8 +37,8 @@ def _create_test_transaction_hex(
         msg=original_store_ballot_tx,
     )
     exonum_message.sign(new_voter_key)
-    transaction_hex = exonum_message.signed_raw().hex()
-    return transaction_hex
+    transaction = exonum_message.signed_raw()
+    return transaction
 
 
 def _decrypt(
@@ -54,12 +54,14 @@ def _decrypt(
 
 
 def test_re_encrypt_message_returns_decryptable_message_with_expected_data():
-    transaction_hex = _create_test_transaction_hex()
+    transaction = _create_test_transaction()
     second_layer_private_key = nacl.public.PrivateKey.generate()
     re_encrypted_message = re_encrypt_message.re_encrypt_blockchain_message_with_sid(
-        store_ballot_transaction_hex=transaction_hex,
+        store_ballot_transaction=transaction,
         re_encryption_public_key=second_layer_private_key.public_key,
         sid="test_sid",
+        voting_id="some_new_voting_id",
+        district_id=100,
     )
 
     signed_message = messages_pb2.SignedMessage()
@@ -73,8 +75,8 @@ def test_re_encrypt_message_returns_decryptable_message_with_expected_data():
     re_encrypted_tx_store_ballot = transactions_pb2.TxStoreBallot()
     re_encrypted_tx_store_ballot.ParseFromString(core_message.any_tx.arguments)
 
-    assert re_encrypted_tx_store_ballot.district_id == 100500
-    assert re_encrypted_tx_store_ballot.voting_id == "test_voting_id"
+    assert re_encrypted_tx_store_ballot.district_id == 100
+    assert re_encrypted_tx_store_ballot.voting_id == "some_new_voting_id"
 
     second_layer_encrypted_message = (
         re_encrypted_tx_store_ballot.encrypted_choice.encrypted_message
@@ -100,33 +102,39 @@ def test_re_encrypt_message_returns_decryptable_message_with_expected_data():
 
 
 def test_re_encrypt_message_returns_error_on_no_sid():
-    transaction_hex = _create_test_transaction_hex()
+    transaction = _create_test_transaction()
     second_layer_private_key = nacl.public.PrivateKey.generate()
     with pytest.raises(ValueError, match="Empty SID"):
         re_encrypt_message.re_encrypt_blockchain_message_with_sid(
-            store_ballot_transaction_hex=transaction_hex,
+            store_ballot_transaction=transaction,
             re_encryption_public_key=second_layer_private_key.public_key,
             sid="",
+            voting_id="some_new_voting_id",
+            district_id=100,
         )
 
 
 def test_re_encrypt_message_returns_error_on_no_district_id():
-    transaction_hex = _create_test_transaction_hex(skip_district=True)
+    transaction = _create_test_transaction(skip_district=True)
     second_layer_private_key = nacl.public.PrivateKey.generate()
     with pytest.raises(ValueError, match="Got invalid district ID in proto"):
         re_encrypt_message.re_encrypt_blockchain_message_with_sid(
-            store_ballot_transaction_hex=transaction_hex,
+            store_ballot_transaction=transaction,
             re_encryption_public_key=second_layer_private_key.public_key,
             sid="test_sid",
+            voting_id="some_new_voting_id",
+            district_id=100,
         )
 
 
 def test_re_encrypt_message_returns_error_on_no_voting_id():
-    transaction_hex = _create_test_transaction_hex(skip_voting_id=True)
+    transaction = _create_test_transaction(skip_voting_id=True)
     second_layer_private_key = nacl.public.PrivateKey.generate()
     with pytest.raises(ValueError, match="Got invalid voting ID in proto"):
         re_encrypt_message.re_encrypt_blockchain_message_with_sid(
-            store_ballot_transaction_hex=transaction_hex,
+            store_ballot_transaction=transaction,
             re_encryption_public_key=second_layer_private_key.public_key,
             sid="test_sid",
+            voting_id="some_new_voting_id",
+            district_id=100,
         )

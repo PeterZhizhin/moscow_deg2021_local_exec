@@ -109,13 +109,18 @@ def _tx_store_ballot_to_exonum_message_hex(
 
 def re_encrypt_blockchain_message_with_sid(
     *,
-    store_ballot_transaction_hex: str,
+    store_ballot_transaction: bytes,
     re_encryption_public_key: nacl.public.PublicKey,
     sid: str,
+    voting_id: str,
+    district_id: int,
 ) -> ReEncryptionResult:
     if not sid:
         raise ValueError("Empty SID")
-    store_ballot_transaction = bytes.fromhex(store_ballot_transaction_hex)
+    if not voting_id:
+        raise ValueError("Invalid voting_id")
+    if not district_id:
+        raise ValueError("Invalid district_id")
     tx_store_ballot = _parse_store_tx_from_raw_hex(store_ballot_transaction)
     _validate_tx_store_ballot(tx_store_ballot)
 
@@ -127,8 +132,8 @@ def re_encrypt_blockchain_message_with_sid(
 
     re_encrypted_tx_store_ballot = _ecnrypted_message_to_tx_store_ballot_message(
         encrypted_message=encrypted_choice_encrypted,
-        district_id=tx_store_ballot.district_id,
-        voting_id=tx_store_ballot.voting_id,
+        district_id=district_id,
+        voting_id=voting_id,
         sid=sid,
     )
 
