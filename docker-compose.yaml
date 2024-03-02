@@ -163,6 +163,15 @@ services:
         environment:
             BLOCKCHAIN_PROXY_URI: http://blockchain_proxy
 
+    re_encrypt_service:
+        command: python /app/re_encrypt_service.py
+        build: ./fake_blockchain_connector/blockchain_votes_processor
+        ports:
+            - 8025:80
+        environment:
+            RE_ENCRYPTOR_LISTEN_PORT: 80
+            RE_ENCRYPTOR_PRIVATE_KEY_HEX: 65a6f2ecb8482b3a96696e36f55ac7726e641ab0add4e137eb3d84d40985abe4
+
     blockchain_votes_processor:
         build: ./fake_blockchain_connector/blockchain_votes_processor
         ports:
@@ -238,6 +247,7 @@ services:
             - redis
             - rabbit_mq
             - fake_arm
+            - re_encrypt_service
         environment:
             REDIS_HOST: redis
             DB_HOST: postgres
@@ -246,6 +256,8 @@ services:
 
             RUN_MIGRATIONS: 'true'
             CHECK_MIGRATIONS_FILE: /app/migrations_file_folder/migrations_applied
+
+            RE_ENCRYPT_URL: http://re_encrypt_service/blockchain_re_encryptor/re_encrypt
 
             ENCRYPTOR_GID_HOST: http://deg_encryptor:8001
             ENCRYPTOR_HOST: http://deg_encryptor:8001
