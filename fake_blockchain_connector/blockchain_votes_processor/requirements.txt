@@ -1,2 +1,6 @@
 aiohttp
 aio_pika
+exonum-python-client @ git+https://github.com/PeterZhizhin/exonum-python-client
+pynacl
+pytest
+protobuf
