@@ -12,6 +12,7 @@ fake_mdm/venv
 **/node_modules
 
 **/*_pb2.py
+**/*_pb2.pyi
 
 fake_mdm/__pycache__
 fake_mdm/app/__pycache__
