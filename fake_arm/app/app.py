@@ -49,7 +49,7 @@ class Voting(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     external_voting_id = db.Column(db.String, nullable=False)
     public_key = db.Column(db.String, nullable=False)
-    private_key = db.Column(db.String, nullable=True)
+    is_running = db.Column(db.Boolean, nullable=False, default=True)
 
     ballots = db.relationship("Ballot", backref="voting", lazy=True)
 
@@ -225,6 +225,12 @@ def stop_voting(voting_id):
         response.raise_for_status()
     except requests.exceptions.HTTPError as err:
         raise ValueError(f"Error from blockchain service:\n{err}\n{err.response.text}")
+
+    voting.is_running = False
+    db.session.commit()
+
+    _refresh_deg_caches()
+
     return redirect(url_for("get_voting", voting_id=voting_id))
 
 
@@ -393,6 +399,10 @@ def config():
         current_config["ID"] = voting.id
         current_config["EXT_ID"] = voting.external_voting_id
         current_config["PUBLIC_KEY"] = voting.public_key
+
+        if not voting.is_running:
+            current_config["END_TIME"] = "1970-01-1"
+
         result.append(current_config)
 
     if not result and not request.args.get("empty_ok"):
