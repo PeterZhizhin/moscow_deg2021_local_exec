@@ -8,13 +8,37 @@
 <h2>State {{ voting_state }}</h2>
 
 {% if voting_state == "Registration" %}
-    <a href="/arm/stop_registration/{{ voting.id }}">Stop registration</a>
+    <a href="/arm/stop_registration/{{ voting.id }}">Остановить регистрацию</a>
 {% endif %}
 
-<p>External voting id: {{ voting.external_voting_id }}</p>
-<p>Public key: {{ voting.public_key }}</p>
-<p>Private key: {{ voting.private_key }}</p>
+{% if voting_state == "InProcess" %}
+    <a href="/arm/stop_voting/{{ voting.id }}">Остановить голосование</a>
+{% endif %}
 
+{% if (voting_state == "Stopped" and private_key is none) %}
+  <form action="/arm/start_decryption/{{ voting.id }}" method="POST">
+    <div> 
+      <label for="private_key">Ключ расшифровки</label>
+      <input id="private_key" name="private_key" type="text" required>
+      <input type="submit" value="Начать расшифровку">
+    </div>
+  </form>
+{% endif %}
+
+<p>ID голосования в блокчейне: {{ voting_id }}</p>
+<p>Публичный ключ голосования: {{ public_key }}</p>
+<p>Приватный ключ голосования: {{ private_key }}</p>
+
+{% if stored_ballots_amount is not none %}
+  <p> Принято бюллетеней: {{ stored_ballots_amount }} </p>
+{% endif %}
+
+{% if decryption_statistics is not none %}
+  <p> Расшифровано бюллетеней: {{ decryption_statistics["decrypted_ballots_amount"] }} </p>
+  <p> Испорченных бюллетеней: {{ decryption_statistics["invalid_ballots_amount"] }} </p>
+{% endif %}
+
+{% if voting_results is none %}
 <p>Ballots</p>
 
 <div>
@@ -32,6 +56,19 @@
         {% endfor %}
     {% endfor %}
 </div>
+{% else %}
+<div>
+    {% for district_result in voting_results %}
+        <p>Район: {{ district_result.district_id }}</p>
+        <p>Действительных бюллетеней: {{ district_result.unique_valid_ballots_amount }}</p>
+        <p>Недействительных бюллетеней: {{ district_result.invalid_ballots_amount }}</p>
+
+        {% for candidate_result in district_result.candidate_results %}
+            <p>{{ candidate_result.candidate_name }}: {{ candidate_result.candidate_result }}</p>
+        {% endfor %}
+    {% endfor %}
+</div>
+{% endif %}
 
 </body>
 </html>

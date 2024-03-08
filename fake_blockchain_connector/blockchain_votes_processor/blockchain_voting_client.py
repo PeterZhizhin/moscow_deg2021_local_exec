@@ -35,6 +35,14 @@ class CryptoSystemSettings:
     public_key: nacl.public.PublicKey | None
     private_key: nacl.public.PrivateKey | None
 
+    def to_json(self) -> dict[str, str | None]:
+        return {
+            "public_key": self.public_key.encode().hex() if self.public_key else None,
+            "private_key": (
+                self.private_key.encode().hex() if self.private_key else None
+            ),
+        }
+
 
 class BallotStatus(enum.Enum):
     UNKNOWN = "Unknown"
@@ -118,6 +126,12 @@ class DecryptionStatistics:
             invalid_ballots_amount=json_response["invalid_ballots_amount"],
         )
 
+    def to_json(self) -> dict[str, int]:
+        return {
+            "decrypted_ballots_amount": self.decrypted_ballots_amount,
+            "invalid_ballots_amount": self.invalid_ballots_amount,
+        }
+
 
 @dataclasses.dataclass(frozen=True)
 class DistrictResult:
@@ -134,6 +148,14 @@ class DistrictResult:
             invalid_ballots_amount=json_response["invalid_ballots_amount"],
             tally=json_response["tally"],
         )
+
+    def to_json(self) -> dict[str, Any]:
+        return {
+            "district_id": self.district_id,
+            "unique_valid_ballots_amount": self.unique_valid_ballots_amount,
+            "invalid_ballots_amount": self.invalid_ballots_amount,
+            "tally": self.tally,
+        }
 
 
 @dataclasses.dataclass(frozen=True)
@@ -154,6 +176,16 @@ class VotingResults:
                 ].items()
             },
         )
+
+    def to_json(self) -> dict[str, Any]:
+        return {
+            "invalid_ballots_amount": self.invlid_ballots_amount,
+            "unique_valid_ballots_amount": self.unique_valid_ballots_amount,
+            "district_results": {
+                district_id: district_result.to_json()
+                for district_id, district_result in self.district_results.items()
+            },
+        }
 
 
 class BlockchainVotingClient:
@@ -357,14 +389,8 @@ class BlockchainVotingClient:
         )
         return await self._send_transaction(exonum_message, wait=True)
 
-    async def publish_decryption_key(self, private_key: nacl.public.PrivateKey) -> str:
-        current_voting_state = await self.voting_state()
-        if current_voting_state != VotingState.STOPPED:
-            raise ValueError(
-                f"Cannot publish decryption key in state {current_voting_state}, expected STOPPED"
-            )
+    async def verify_private_key(self, private_key: nacl.public.PrivateKey):
         crypto_system_settings = await self.crypto_system_settings()
-
         input_private_key_public_key = private_key.public_key
         blockchain_public_key = crypto_system_settings.public_key
         assert (
@@ -376,6 +402,15 @@ class BlockchainVotingClient:
                 f"key {private_key.encode().hex()} does not match blockchain public "
                 f"key {blockchain_public_key.encode().hex()}"
             )
+
+    async def publish_decryption_key(self, private_key: nacl.public.PrivateKey) -> str:
+        current_voting_state = await self.voting_state()
+        if current_voting_state != VotingState.STOPPED:
+            raise ValueError(
+                f"Cannot publish decryption key in state {current_voting_state}, expected STOPPED"
+            )
+
+        await self.verify_private_key(private_key)
 
         publish_decryotion_key_tx = transactions_pb2.TxPublishDecryptionKey(
             voting_id=self._voting_id,
