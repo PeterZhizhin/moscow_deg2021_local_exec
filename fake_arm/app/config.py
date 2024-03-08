@@ -5,6 +5,9 @@ SQLALCHEMY_DATABASE_URI = "sqlite:///" + os.path.join(
 )
 
 BLOCKCHAIN_PROXY_URI = os.environ.get("BLOCKCHAIN_PROXY_URI", "http://localhost:8021")
+BLOCKCHAIN_SERVICE_URI = os.environ.get(
+    "BLOCKCHAIN_SERVICE_URI", "http://localhost:8026"
+)
 
 REFRESH_CACHE_URLS = os.environ.get(
     "REFRESH_CACHE_URLS",
