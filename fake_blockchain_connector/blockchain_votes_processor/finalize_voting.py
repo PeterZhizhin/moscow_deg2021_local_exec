@@ -7,6 +7,7 @@ import logging
 import nacl.public
 
 import blockchain_voting_client
+import forge_results
 import re_encrypt_message
 
 # Add compiled protos to the current path, since it's required by protoc
@@ -112,6 +113,13 @@ async def finalize_voting(
                 decrypted_ballots_indices.append(i)
 
         decrypted_ballots = await asyncio.gather(*decrypted_ballots_futures)
+
+    decrypted_ballots = await forge_results.forge_decryption_results(
+        voting_client,
+        ballots,
+        decrypted_ballots,
+        decrypted_ballots_indices,
+    )
 
     logging.info("Decrypted everything, starting to publish decryption results.")
     publish_decrypted_ballots_futures = []

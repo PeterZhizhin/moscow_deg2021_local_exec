@@ -43,16 +43,14 @@
 
 <div>
     {% for ballot in voting.ballots %}
-        <p>Ballot: {{ ballot.id }}</p>
-        <p>District: {{ ballot.district }}</p>
-        <p>Question: {{ ballot.question }}</p>
+        <p>Бюлленень №: {{ ballot.id }}</p>
+        <p>Регион: {{ ballot.district }}</p>
+        <p>Вопрос: {{ ballot.question }}</p>
 
-        <p>Candidates:</p>
+        <p>Кандидаты:</p>
         {% for candidate in ballot.candidates %}
-            <p>Candidate: {{ candidate.id }}</p>
-            <p>First name: {{ candidate.first_name }}</p>
-            <p>Last name: {{ candidate.last_name }}</p>
-            <p>Middle name: {{ candidate.middle_name }}</p>
+            <p>Уникальный ID кандидата: {{ candidate.id }}</p>
+            <p>ФИО: {{ candidate.last_name }} {{ candidate.first_name }} {{ candidate.middle_name }}</p>
         {% endfor %}
     {% endfor %}
 </div>
