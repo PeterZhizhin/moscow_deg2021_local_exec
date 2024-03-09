@@ -13,7 +13,7 @@ class AppServiceProvider extends ServiceProvider
         
         $backURL = PoolConfig::me()->get('Sudir')->get('backurl');
         $parsedUrl = parse_url($backURL);
-        app()['router']->get($parsedUrl['path'], 'App\Http\Controllers\OAuthController@handle');
+        // app()['router']->get($parsedUrl['path'], 'App\Http\Controllers\OAuthController@handle');
         $view = app()['view'];
         $view->share('CFG_MEDIA_HOST', null);
         $view->share('CFG_CSS_HOST', null);
