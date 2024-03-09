@@ -11,6 +11,10 @@ db = SQLAlchemy()
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+
+    telegram_id = db.Column(db.Integer, unique=False)
+    telegram_validate_token = db.Column(db.String(40), unique=True)
+
     username = db.Column(db.String(40), unique=True)
 
     first_name = db.Column(db.String(40), unique=False)
@@ -18,7 +22,7 @@ class User(db.Model):
     middle_name = db.Column(db.String(40), unique=False)
 
     mail = db.Column(db.String(40), unique=False)
-    mobile = db.Column(db.String(40), unique=False)
+    mobile = db.Column(db.String(40), unique=True)
 
     telegram_code = db.relationship(
         "TelegramCode", back_populates="user", uselist=False

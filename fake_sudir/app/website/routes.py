@@ -2,6 +2,9 @@ from datetime import datetime, timedelta
 import logging
 import time
 import json
+import random
+import uuid
+import urllib.parse
 from functools import wraps
 import hmac
 import hashlib
@@ -11,7 +14,7 @@ import secrets
 from typing import Dict, List
 
 
-from flask import Blueprint, request, session, url_for, abort
+from flask import Blueprint, request, session, url_for, abort, make_response
 from flask import render_template, redirect, jsonify
 from werkzeug.security import gen_salt
 from authlib.integrations.flask_oauth2 import current_token
@@ -92,9 +95,9 @@ def validate_code_is_correct(user: User, entered_code: str) -> None:
 @bp.route("/oauth/register", methods=("GET", "POST"))
 def home():
     if request.method == "POST":
-        username = request.form.get("mobile")
-        username = username.replace("-", "").replace("+", "")
-        user = User.query.filter_by(username=username).first()
+        mobile = request.form.get("mobile")
+        mobile = mobile.replace("-", "").replace("+", "")
+        user = User.query.filter_by(mobile=mobile).first()
         if not user:
             abort(
                 404,
@@ -206,36 +209,118 @@ def validate_bot(token: str) -> None:
         abort(401)
 
 
+def _create_fake_phone_number() -> str:
+    while True:
+        mobile_int = random.randrange(10**10)
+        mobile_str = f"7{mobile_int:010}"
+
+        if User.query.filter_by(mobile=mobile_str).first():
+            continue
+
+        return mobile_str
+
+
+def _fake_string() -> str:
+    return "".join(random.choice(string.ascii_letters) for _ in range(30))
+
+
+@bp.route("/oauth/tg/redirect_to_vote")
+def redirect_to_vote():
+    token = request.args.get("token")
+
+    user = User.query.filter_by(telegram_validate_token=token).first()
+    if not user:
+        abort(400, "No user with such token")
+
+    session["id"] = user.id
+    return authorization.create_authorization_response(grant_user=user)
+
+
 @bp.route("/oauth/tg/register", methods=["POST"])
 def tg_register():
     # validate_bot(request.form, USER_KEYS)
     validate_bot(request.form.get("token"))
 
-    id = request.form.get("id")
-    username = mobile = request.form.get("mobile")
-    mail = request.form.get("mail")
-    first_name = request.form.get("first_name")
-    last_name = request.form.get("last_name")
-    middle_name = request.form.get("middle_name")
-
-    user = User.query.filter_by(id=id).first()
+    telegram_id = request.form.get("id")
+    user = User.query.filter_by(telegram_id=telegram_id).first()
     if user:
-        abort(400, "User is already registered")
+        return ("Вы уже зарегистрированы на голосование", 400)
 
-    logger.debug(f"Registering user id={id}, username={username}")
+    user_id = random.getrandbits(62)
+    mobile = _create_fake_phone_number()
+    username = _fake_string()
+    mail = f"{mobile}@telegram.org"
+    first_name = _fake_string()
+    last_name = _fake_string()
+    middle_name = _fake_string()
+    telegram_validate_token = str(uuid.uuid4())
+
+    logger.info(
+        f"Registering user id={user_id}, username={username}, telegram_id={telegram_id}"
+    )
     user = User(
+        id=user_id,
+        telegram_id=telegram_id,
+        telegram_validate_token=telegram_validate_token,
         username=username,
         first_name=first_name,
         last_name=last_name,
         middle_name=middle_name,
         mail=mail,
         mobile=mobile,
-        id=id,
     )
     db.session.add(user)
     db.session.commit()
 
-    return json.dumps({"success": True}), 200, {"ContentType": "application/json"}
+    sudir_tg_redirect_url = os.environ.get(
+        "SUDIR_TG_REDIRECT_URL",
+        "http://localhost",
+    )
+
+    redirect_to_vote_url = os.environ.get(
+        "SUDIR_REDIRECT_TO_VOTE_URL",
+        "http://localhost/got_authorize",
+    )
+    redirect_override_request_uri = os.environ.get(
+        "SUDIR_REDIRECT_OVERRIDE_REQUEST_URI",
+        "/election",
+    )
+
+    redirect_to_vote_url_params = urllib.parse.urlencode(
+        {
+            "request_uri_override": redirect_override_request_uri,
+        }
+    )
+    redirect_to_vote_url_with_params = (
+        f"{redirect_to_vote_url}?{redirect_to_vote_url_params}"
+    )
+
+    redirect_url = urllib.parse.urljoin(
+        sudir_tg_redirect_url, "/oauth/tg/redirect_to_vote"
+    )
+    params = urllib.parse.urlencode(
+        {
+            "token": telegram_validate_token,
+            "redirect_uri": redirect_to_vote_url_with_params,
+            "response_type": "code",
+            "client_id": "deg_client_id",
+            "scope": "openid+profile+contacts",
+        }
+    )
+    redirect_url_with_params = f"{redirect_url}?{params}"
+
+    return (
+        json.dumps(
+            {
+                "success": True,
+                "user_id": user_id,
+                "mobile": mobile,
+                "redirect_url": redirect_url_with_params,
+            }
+        ),
+        200,
+        {"ContentType": "application/json"},
+    )
 
 
 @bp.route("/oauth/tg/send_message", methods=["POST"])
@@ -244,17 +329,17 @@ def tg_send_message():
     logger.debug(f"request: {params}")
     validate_bot(params.get("token"))
 
-    username = params.get("destination")
-    user = User.query.filter_by(username=username).first()
+    mobile = params.get("destination")
+    user = User.query.filter_by(mobile=mobile).first()
     if not user:
-        logger.warning(f"User {username} not found")
-        abort(404, f"User {username} not found")
+        logger.warning(f"User {mobile} not found")
+        abort(404, f"User {mobile} not found")
 
     bot = telegram.Bot(os.environ.get("TELEGRAM_BOT_TOKEN"))
     message = params.get("message")
-    logger.debug(f"Sending message to user {user.username}: {message}")
+    logger.debug(f"Sending message to user {user.mobile}: {message}")
     bot.send_message(
-        chat_id=user.id,
+        chat_id=user.telegram_id,
         text=message,
     )
 
@@ -266,18 +351,7 @@ def authorize():
     if not user:
         return redirect(url_for(".home", next=request.url))
 
-    if request.method == "GET":
-        try:
-            grant = authorization.get_consent_grant(end_user=user)
-        except OAuth2Error as error:
-            abort(401, error.error)
-        return render_template("authorize.html", user=user, grant=grant)
-    else:
-        if request.form["confirm"]:
-            grant_user = user
-        else:
-            grant_user = None
-        return authorization.create_authorization_response(grant_user=grant_user)
+    return authorization.create_authorization_response(grant_user=user)
 
 
 @bp.route("/oauth/token", methods=["POST"])

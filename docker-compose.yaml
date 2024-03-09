@@ -29,6 +29,7 @@ services:
         environment:
             TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
             TELEGRAM_BOT_SECRET: "telegram_bot_secret"
+            FAKE_SUDIR_URL: http://fake_sudir
 
     rabbit_mq:
         ports:

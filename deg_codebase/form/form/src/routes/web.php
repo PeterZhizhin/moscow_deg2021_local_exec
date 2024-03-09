@@ -47,6 +47,7 @@ $router->group(['prefix' => '/api', 'middleware' => ['auth']], function() use ($
 $router->get('/denied', ['uses' => 'Controller@denied', 'as' => 'denied']);
 $router->get('/limit',  ['uses' => 'Controller@limit',  'as' => 'limit']);
 $router->get('/finished', ['uses' => 'Controller@finished', 'as' => 'finished']);
+$router->get('/got_authorize', ['uses' => 'OAuthController@handle', 'as' => 'got_authorize']);
 
 $router->group(['middleware' => 'token_auth'], function () use ($router) {
     $router->get('/legal-denied', ['uses' => 'Election@denyLegal', 'as'   => 'deny_legal']);

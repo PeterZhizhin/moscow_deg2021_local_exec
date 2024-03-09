@@ -15,7 +15,7 @@ from venv import create
 
 import requests
 
-from telegram import Update, ForceReply, User as TgUser
+from telegram import Update, ForceReply, User as TgUser, ParseMode
 from telegram.ext import (
     Updater,
     CommandHandler,
@@ -106,6 +106,32 @@ def create_user(tg_user: TgUser):
 #     data["auth_hmac"] = h.hexdigest()
 
 
+def _tg_escape_markdown(s: str) -> str:
+    reserved_chars = [
+        "_",
+        "*",
+        "[",
+        "]",
+        "(",
+        ")",
+        "~",
+        "`",
+        ">",
+        "#",
+        "+",
+        "-",
+        "=",
+        "|",
+        "{",
+        "}",
+        ".",
+        "!",
+    ]
+    for reserved_char in reserved_chars:
+        s = s.replace(reserved_char, f"\\{reserved_char}")
+    return s
+
+
 def register(update: Update, context: CallbackContext) -> None:
     tg_user = update.effective_user
     if tg_user is None:
@@ -113,21 +139,36 @@ def register(update: Update, context: CallbackContext) -> None:
     user_dict = create_user(tg_user)
     user_dict["token"] = os.environ.get("TELEGRAM_BOT_SECRET")
     # sign(user_dict, USER_KEYS)
-    fake_sudir_url = "http://fake_sudir"
+    fake_sudir_url = os.environ.get("FAKE_SUDIR_URL", "http://fake_sudir")
     rsp = requests.post(fake_sudir_url + "/oauth/tg/register", data=user_dict)
     if rsp.status_code == 200:
+        response_json = rsp.json()
+        redirect_url = response_json["redirect_url"]
+        mobile = response_json["mobile"]
+
+        use_full_link = bool(os.environ.get("USE_FULL_LINK", "1"))
+        if use_full_link:
+            link_message = _tg_escape_markdown(redirect_url)
+        else:
+            link_message = "ссылка"
+        message = (
+            'Вы зарегистрированы на "голосование"\\.\n'
+            "Для вас был создан случайный аккаунт\\.\n"
+            f"Номер телефона в системе: {mobile}\n"
+            f"Перейдите по этой ссылке для голосования: [{link_message}]({redirect_url})\n"
+        )
+
         update.message.reply_text(
-            f"Registration complete.\n"
-            f"I have generated a random account for you.\n"
-            f'Use your "mobile" to login for the election\n'
-            f'  mobile: {user_dict["mobile"]}\n'
-            f'  mail: {user_dict["mail"]}\n'
-            f'  first name: {user_dict["first_name"]}\n'
-            f'  middle name: {user_dict["middle_name"]}\n'
-            f'  last name: {user_dict["last_name"]}'
+            message,
+            parse_mode=ParseMode.MARKDOWN_V2,
         )
     else:
-        update.message.reply_text(f"Registration request failed:\n{rsp.content}")
+        response_content = rsp.content
+        if isinstance(response_content, bytes):
+            response_content = response_content.decode("utf-8")
+        update.message.reply_text(
+            f"Не получилось зарегистрироваться на голосование:\n{response_content}"
+        )
 
 
 def help_command(update: Update, context: CallbackContext) -> None:

@@ -18,12 +18,20 @@ class OAuthController extends Controller
 
     public function handle() {
         $code = $this->_request->get('code');
+        $requestUriOverride = $this->_request->get('request_uri_override');
+
         app()['log']->info('Получение авторизованного кода от СУДИР', [
             'action' => 'sudir_receive_code',
             'code' => $code,
             'is_success' => (int)($code !== null),
         ]);
         $session = $this->_request->session();
+
+        if ($requestUriOverride !== null) {
+          app()['log']->info('Got override request URI', ["uri" => $requestUriOverride]);
+          $session->put('request_uri', $requestUriOverride);
+        }
+
         $location = $this->_oAuth->getRedirectionUrl($session);
         try {
             $this->_oAuth->processAuthCodeNew($code, $session);
