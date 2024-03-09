@@ -145,14 +145,14 @@ async def start_decryption(request: aiohttp.web.Request) -> aiohttp.web.Response
 
         re_encryption_private_key = _get_re_encryption_private_key()
 
-        DecryptionHandler.instance().add_decryption(
-            finalize_voting.finalize_voting(
-                voting_client=client,
-                first_layer_private_key=voting_private_key,
-                re_encryption_private_key=re_encryption_private_key,
-                decrypt_workers=config.BLOCKCHAIN_SERVICE_DECRYPT_WORKERS,
-            ),
-        )
+        # DecryptionHandler.instance().add_decryption(
+        await finalize_voting.finalize_voting(
+            voting_client=client,
+            first_layer_private_key=voting_private_key,
+            re_encryption_private_key=re_encryption_private_key,
+            decrypt_workers=config.BLOCKCHAIN_SERVICE_DECRYPT_WORKERS,
+        )  # ,
+        # )
 
         return aiohttp.web.json_response({"status": "ok"})
     except ValueError as e:
@@ -165,6 +165,6 @@ app = aiohttp.web.Application()
 app.add_routes(routes)
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=logging.DEBUG)
     logger.info(f"Starting the server on port {config.BLOCKCHAIN_SERVICE_LISTEN_PORT}")
     aiohttp.web.run_app(app, port=config.BLOCKCHAIN_SERVICE_LISTEN_PORT)

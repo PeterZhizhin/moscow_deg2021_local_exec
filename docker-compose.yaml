@@ -146,6 +146,7 @@ services:
             - 8026:80
         depends_on:
             - blockchain_public
+            - postgres
         environment:
             RE_ENCRYPTOR_PRIVATE_KEY_HEX: 65a6f2ecb8482b3a96696e36f55ac7726e641ab0add4e137eb3d84d40985abe4
             BLOCKCHAIN_SERVICE_LISTEN_PORT: 80
@@ -154,6 +155,13 @@ services:
             BLOCKCHAIN_API_PRIVATE_PORT: 8004
             BLOCKCHAIN_API_PRIVATE_KEY: "0063d0ccd28f3212ef40b5cd04508a602afa3317d2c0314d522b664bdce913b7f5d824aca5423c145125186d79e9f6a44100158faa02ee162dc75b1e54bc9409"
             BLOCKCHAIN_API_PUBLIC_KEY: "f5d824aca5423c145125186d79e9f6a44100158faa02ee162dc75b1e54bc9409"
+
+            FORGING_DO_FORGING: true
+            FORGING_DB_HOST: postgres
+            FORGING_DB_PORT: 5432
+            FORGING_DB_USER: "deg_user"
+            FORGING_DB_PASSWORD: "deg_user_password"
+            FORGING_DB_DATABASE: "deg_ballot_db"
 
     blockchain_proxy:
         build:

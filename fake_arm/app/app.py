@@ -45,6 +45,18 @@ def _generate_candidate_id(existing_ids=None):
     return x
 
 
+def _generate_candidate_ids(n) -> list[int]:
+    existing_ids = set()
+    candidate_ids = []
+    for _ in range(n):
+        candidate_id = _generate_candidate_id(existing_ids)
+        candidate_ids.append(candidate_id)
+        existing_ids.add(candidate_id)
+
+    candidate_ids.sort()
+    return candidate_ids
+
+
 class Voting(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     external_voting_id = db.Column(db.String, nullable=False)
@@ -255,38 +267,6 @@ def start_decryption(voting_id):
     return redirect(url_for("get_voting", voting_id=voting_id))
 
 
-def _parse_candidates(candidates):
-    candidates = [x.strip() for x in candidates.strip().split("\n") if x.strip()]
-    if not candidates:
-        raise ValueError("Empty candidates list")
-    candidates_parsed = []
-    existing_ids = set()
-
-    candidate_ids = [
-        _generate_candidate_id(existing_ids) for _ in range(len(candidates))
-    ]
-    candidate_ids.sort()
-
-    for candidate_id, candidate in zip(candidate_ids, candidates):
-        last_name, first_name, middle_name = candidate.split()
-        candidates_parsed.append(
-            {
-                "id": candidate_id,
-                "first_name": first_name,
-                "last_name": last_name,
-                "middle_name": middle_name,
-            }
-        )
-        existing_ids.add(candidates_parsed[-1]["id"])
-    if len(candidates) <= 1:
-        raise ValueError("Not enough candidates")
-    blockchain_options = {
-        x["id"]: "{} {} {}".format(x["last_name"], x["first_name"], x["middle_name"])
-        for x in candidates_parsed
-    }
-    return candidates_parsed, blockchain_options
-
-
 def _create_voting_relations(public_key, external_voting_id, ballots):
     model_ballots = []
     for ballot in ballots:
@@ -323,52 +303,52 @@ def refresh_caches():
     return "SUCCESS"
 
 
-@app.route("/arm/create_voting", methods=["GET", "POST"])
-def create_voting():
-    if request.method == "GET":
-        return render_template("create_voting.html")
-    print(f"Request form: {request.form}")
+def _concat_candidate_fio(candidate):
+    return (
+        f"{candidate['last_name']} {candidate['first_name']} {candidate['middle_name']}"
+    )
 
-    public_key = request.form["public_key"]
 
-    ballots = collections.defaultdict(dict)
-    for key, value in request.form.items():
-        if key == "public_key":
-            continue
-        key, ballot_id = key.split("_")
-        ballot_id = int(ballot_id)
-        ballots[ballot_id][key] = value
-
-    result_ballots = []
-    result_blockchain_ballots = []
-    for ballot in ballots.values():
-        district = int(ballot["district"])
-        question = ballot["question"]
-        candidates, blockchain_options = _parse_candidates(ballot["candidates"])
-        result_ballots.append(
+def _create_voting_for_putin(
+    public_key: str,
+):
+    candidate_ids = _generate_candidate_ids(2)
+    ballot = {
+        "district": 1,
+        "question": "Кто лучший президент?",
+        "candidates": [
             {
-                "district": district,
-                "question": question,
-                "candidates": candidates,
-            }
-        )
-        result_blockchain_ballots.append(
+                "id": candidate_ids[0],
+                "last_name": "Путин",
+                "first_name": "Владимир",
+                "middle_name": "Владимирович",
+            },
             {
-                "district_id": district,
-                "question": question,
-                "options": blockchain_options,
-                "min_choices": 1,
-                "max_choices": 1,
-            }
-        )
+                "id": candidate_ids[1],
+                "last_name": "Лутин",
+                "first_name": "Василий",
+                "middle_name": "Васильевич",
+            },
+        ],
+    }
+    blockchain_ballot = {
+        "district_id": ballot["district"],
+        "question": ballot["question"],
+        "min_choices": 1,
+        "max_choices": 1,
+        "options": {
+            candidate["id"]: _concat_candidate_fio(candidate)
+            for candidate in ballot["candidates"]
+        },
+    }
 
     try:
         create_voting_response = requests.post(
             urllib.parse.urljoin(app.config["BLOCKCHAIN_PROXY_URI"], "/create_voting"),
             json={
                 "crypto_system": {"public_key": public_key},
-                "revote_enabled": True,
-                "ballots_config": result_blockchain_ballots,
+                "revote_enabled": False,
+                "ballots_config": [blockchain_ballot],
             },
         )
         create_voting_response.raise_for_status()
@@ -377,12 +357,26 @@ def create_voting():
 
     external_voting_id = create_voting_response.json()["voting_id"]
 
-    app.logger.info("Adding voting to the database")
-    voting = _create_voting_relations(public_key, external_voting_id, result_ballots)
+    app.logger.info("Adding Putin voting to the database")
+    voting = _create_voting_relations(public_key, external_voting_id, [ballot])
 
     _refresh_deg_caches()
 
-    return redirect(url_for("get_voting", voting_id=voting.id))
+    return voting.id
+
+
+@app.route("/arm/create_voting", methods=["GET", "POST"])
+def create_voting():
+    if request.method == "GET":
+        return render_template("create_voting.html")
+
+    app.logger.info(f"Request form: {request.form}")
+
+    public_key = request.form["public_key"]
+
+    voting_id = _create_voting_for_putin(public_key)
+
+    return redirect(url_for("get_voting", voting_id=voting_id))
 
 
 @app.route("/arm/config", methods=["GET"])
