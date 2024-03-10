@@ -3,3 +3,4 @@ Flask-SQLAlchemy
 Flask-Migrate
 Authlib
 python-telegram-bot==13.11
+psycopg2-binary

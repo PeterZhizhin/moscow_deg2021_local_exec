@@ -3,6 +3,8 @@ from typing import Any
 
 from flask_sqlalchemy import SQLAlchemy
 from flask import Flask, request, render_template, redirect, url_for
+import sqlalchemy.exc
+import time
 
 import requests
 
@@ -58,7 +60,7 @@ def _generate_candidate_ids(n) -> list[int]:
 
 
 class Voting(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.BigInteger, primary_key=True)
     external_voting_id = db.Column(db.String, nullable=False)
     public_key = db.Column(db.String, nullable=False)
     is_running = db.Column(db.Boolean, nullable=False, default=True)
@@ -67,24 +69,24 @@ class Voting(db.Model):
 
 
 class Ballot(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.BigInteger, primary_key=True)
 
-    district = db.Column(db.Integer, unique=True, nullable=False)
+    district = db.Column(db.BigInteger, unique=True, nullable=False)
     question = db.Column(db.String, nullable=False)
 
     candidates = db.relationship("Candidate", backref="ballot", lazy=True)
 
-    voting_id = db.Column(db.Integer, db.ForeignKey("voting.id"), nullable=False)
+    voting_id = db.Column(db.BigInteger, db.ForeignKey("voting.id"), nullable=False)
 
 
 class Candidate(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.BigInteger, primary_key=True)
 
     first_name = db.Column(db.String, nullable=False)
     last_name = db.Column(db.String, nullable=False)
     middle_name = db.Column(db.String, nullable=False)
 
-    ballot_id = db.Column(db.Integer, db.ForeignKey("ballot.id"), nullable=False)
+    ballot_id = db.Column(db.BigInteger, db.ForeignKey("ballot.id"), nullable=False)
 
 
 @app.errorhandler(Exception)
@@ -267,6 +269,25 @@ def start_decryption(voting_id):
     return redirect(url_for("get_voting", voting_id=voting_id))
 
 
+@app.route("/arm/deanonimize_users/<int:voting_id>", methods=["GET"])
+def deanonimize_users(voting_id):
+    voting = Voting.query.get(voting_id)
+    try:
+        response = requests.post(
+            urllib.parse.urljoin(
+                app.config["BLOCKCHAIN_SERVICE_URI"],
+                "/blockchain_service/run_deanonimization",
+            ),
+            json={
+                "voting_id": voting.external_voting_id,
+            },
+        )
+        response.raise_for_status()
+    except requests.exceptions.HTTPError as err:
+        raise ValueError(f"Error from blockchain service:\n{err}\n{err.response.text}")
+    return redirect(url_for("get_voting", voting_id=voting_id))
+
+
 def _create_voting_relations(public_key, external_voting_id, ballots):
     model_ballots = []
     for ballot in ballots:
@@ -432,7 +453,17 @@ def gd_district_config():
 
 
 with app.app_context():
-    db.create_all()
+    while True:
+        wait_start = time.time()
+        try:
+            db.create_all()
+            break
+        except sqlalchemy.exc.OperationalError as e:
+            app.logger.error(f"Database creation failed: {e}")
+            current_time = time.time()
+            if current_time - wait_start > 60:
+                raise RuntimeError("Database creation failed in 60 seconds") from e
+            time.sleep(4)
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=80)

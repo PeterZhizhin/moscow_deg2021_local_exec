@@ -1,6 +1,7 @@
 import os
 import time
 import logging
+import sqlalchemy.exc
 from flask import Flask
 from .models import db, User, OAuth2Client
 from .oauth2 import config_oauth
@@ -75,7 +76,19 @@ def setup_app(app):
     with app.app_context():
         # Uncomment the next line for clean start.
         # db.drop_all()
-        db.create_all()
+
+        while True:
+            wait_start = time.time()
+            try:
+                db.create_all()
+                break
+            except sqlalchemy.exc.OperationalError as e:
+                app.logger.error(f"Database creation failed: {e}")
+                current_time = time.time()
+                if current_time - wait_start > 60:
+                    raise RuntimeError("Database creation failed in 60 seconds") from e
+                time.sleep(4)
+
         create_db_elements()
     config_oauth(app)
     app.register_blueprint(bp, url_prefix="")

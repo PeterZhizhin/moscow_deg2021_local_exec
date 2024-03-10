@@ -32,7 +32,6 @@ def generate_gid():
     if ssoId is None:
         return {"errorCode": "3", "errorMessage": "Missing ssoId from request"}
 
-    secret = app.config["SECRET_KEY"]
     hash_func = blake2b(key=bytes.fromhex(app.config["SECRET_KEY"]))
     hash_func.update(ssoId.encode("utf-8"))
 

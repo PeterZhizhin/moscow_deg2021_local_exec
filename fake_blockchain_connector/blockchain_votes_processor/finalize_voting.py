@@ -18,7 +18,7 @@ from exonum_modules.main import schema_pb2
 logger = logging.getLogger(__file__)
 
 
-def _ballots_config_to_district_to_ballot_config(
+def ballots_config_to_district_to_ballot_config(
     ballots_config: list[schema_pb2.BallotConfig],
 ) -> dict[int, schema_pb2.BallotConfig]:
     result = {}
@@ -27,7 +27,7 @@ def _ballots_config_to_district_to_ballot_config(
     return result
 
 
-def _decrypt_and_verify_validity(
+def decrypt_and_verify_validity(
     ballot: blockchain_voting_client.Ballot,
     district_id_to_ballot_config: dict[int, schema_pb2.BallotConfig],
     re_encryption_private_key: nacl.public.PrivateKey,
@@ -80,7 +80,7 @@ async def finalize_voting(
         await voting_client.publish_decryption_key(first_layer_private_key)
 
     ballots_config = await voting_client.ballots_config()
-    district_id_to_ballots_config = _ballots_config_to_district_to_ballot_config(
+    district_id_to_ballots_config = ballots_config_to_district_to_ballot_config(
         ballots_config
     )
     logging.info(f"Got ballots config: {district_id_to_ballots_config}")
@@ -103,7 +103,7 @@ async def finalize_voting(
                 decrypted_ballots_futures.append(
                     asyncio.get_running_loop().run_in_executor(
                         decrypt_executor,
-                        _decrypt_and_verify_validity,
+                        decrypt_and_verify_validity,
                         ballot,
                         district_id_to_ballots_config,
                         re_encryption_private_key,

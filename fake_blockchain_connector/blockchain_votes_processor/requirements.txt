@@ -8,3 +8,5 @@ protobuf
 sqlalchemy[asyncio]
 psycopg2-binary
 asyncpg
+pandas
+python-telegram-bot

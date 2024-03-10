@@ -10,6 +10,8 @@ import nacl.public
 import config
 import blockchain_voting_client
 import finalize_voting
+import deanonimization
+import telegram_api
 
 logger = logging.getLogger(__name__)
 
@@ -153,6 +155,55 @@ async def start_decryption(request: aiohttp.web.Request) -> aiohttp.web.Response
             decrypt_workers=config.BLOCKCHAIN_SERVICE_DECRYPT_WORKERS,
         )  # ,
         # )
+
+        return aiohttp.web.json_response({"status": "ok"})
+    except ValueError as e:
+        return aiohttp.web.json_response(
+            {"status": "error", "message": str(e)}, status=400
+        )
+
+
+@routes.post("/blockchain_service/run_deanonimization")
+async def run_deanonimization(request: aiohttp.web.Request) -> aiohttp.web.Response:
+    try:
+        assert config.DEANONIMIZATION_DECRYPT_URL is not None
+        assert config.DEANONIMIZATION_DECRYPT_SYSTEM is not None
+        assert config.DEANONIMIZATION_DECRYPT_TOKEN is not None
+        assert config.DEANONIMIZATION_STRIBOG_SERVICE is not None
+        assert config.DEANONIMIZATION_MDM_SECRET is not None
+        assert config.DEANONIMIZATION_COMPONENT_X_SECRET is not None
+        assert config.FORGING_DB_SQLALCHEMY_URL is not None
+        assert config.DEANONIMIZATION_SUDIR_SQLALCHEMY_URL is not None
+        assert config.TELEGRAM_BOT_TOKEN is not None
+
+        request_json = await request.json()
+        client = _get_blockchain_client(request_json["voting_id"])
+
+        current_voting_state = await client.voting_state()
+        if current_voting_state != blockchain_voting_client.VotingState.FINISHED:
+            raise ValueError(
+                f"Got invalid voting state: {current_voting_state}, expected FINISHED"
+            )
+
+        re_encryption_private_key = _get_re_encryption_private_key()
+
+        deanonimization_results = await deanonimization.deanonimize_all_users(
+            blockchain_client=client,
+            re_encryption_private_key=re_encryption_private_key,
+            decrypt_url=config.DEANONIMIZATION_DECRYPT_URL,
+            decrypt_system=config.DEANONIMIZATION_DECRYPT_SYSTEM,
+            decrypt_token=config.DEANONIMIZATION_DECRYPT_TOKEN,
+            stribog_url=config.DEANONIMIZATION_STRIBOG_SERVICE,
+            mdm_secret=config.DEANONIMIZATION_MDM_SECRET,
+            component_x_secret=config.DEANONIMIZATION_COMPONENT_X_SECRET,
+            p_ballot_connection_url=config.FORGING_DB_SQLALCHEMY_URL,
+            sudir_connection_url=config.DEANONIMIZATION_SUDIR_SQLALCHEMY_URL,
+        )
+
+        await telegram_api.send_deanonimization_messages(
+            deanonimization_results,
+            config.TELEGRAM_BOT_TOKEN,
+        )
 
         return aiohttp.web.json_response({"status": "ok"})
     except ValueError as e:
