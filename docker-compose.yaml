@@ -14,14 +14,30 @@ services:
     fake_mdm:
         build: ./fake_mdm
 
+    postgres_sudir:
+        image: postgres
+        restart: always
+        ports:
+            - 5433:5432
+        environment:
+            POSTGRES_USER: sudir_user
+            POSTGRES_PASSWORD: sudir_user_password
+            POSTGRES_DB: sudir_db 
+            PGDATA: /postgres_data
+        volumes:
+            - ./storage/postgres_sudir_data:/postgres_data
+
     fake_sudir:
         build: ./fake_sudir
         volumes:
             - ./storage/fake_sudir_db:/app/database
+        depends_on:
+            - postgres_sudir
         environment:
             AUTHLIB_INSECURE_TRANSPORT: 1
             TELEGRAM_BOT_SECRET: "telegram_bot_secret"
             TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+            SQLALCHEMY_DATABASE_URI: "postgresql://sudir_user:sudir_user_password@postgres_sudir:5432/sudir_db"
 
     fake_sudir_bot:
         build: ./fake_sudir_bot
@@ -79,6 +95,7 @@ services:
             - 8082:8080
         depends_on:
             - postgres
+            - postgres_sudir
 
     blockchain_public:
         command: /bin/bash -c "/launch.sh"
@@ -147,6 +164,9 @@ services:
         depends_on:
             - blockchain_public
             - postgres
+            - postgres_sudir
+            - deg_encryptor
+            - stribog512
         environment:
             RE_ENCRYPTOR_PRIVATE_KEY_HEX: 65a6f2ecb8482b3a96696e36f55ac7726e641ab0add4e137eb3d84d40985abe4
             BLOCKCHAIN_SERVICE_LISTEN_PORT: 80
@@ -163,6 +183,16 @@ services:
             FORGING_DB_PASSWORD: "deg_user_password"
             FORGING_DB_DATABASE: "deg_ballot_db"
 
+            DEANONIMIZATION_DECRYPT_URL: "http://deg_encryptor:8001/api/encryption/decrypt"
+            DEANONIMIZATION_DECRYPT_SYSTEM: "componentX"
+            DEANONIMIZATION_DECRYPT_TOKEN: "componentX_token"
+            DEANONIMIZATION_STRIBOG_SERVICE: "http://stribog512"
+            DEANONIMIZATION_MDM_SECRET: "1b58f1bc0c88f6f864ead6bd916b5ed5c00b3f398bac43a4f65bc213ecd19494"
+            DEANONIMIZATION_COMPONENT_X_SECRET: "0faa344b82b8900b2d23aefb2e157e2139a5e6d0b6c74ad8a05bdaf3e2d34bee"
+            DEANONIMIZATION_SUDIR_SQLALCHEMY_URL: "postgresql+asyncpg://sudir_user:sudir_user_password@postgres_sudir:5432/sudir_db"
+
+            TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+
     blockchain_proxy:
         build:
             context: .
@@ -177,6 +207,19 @@ services:
             PRIVATE_API_URL: http://blockchain_private:8000
             LISTEN_PORT: 80
 
+    postgres_arm:
+        image: postgres
+        restart: always
+        ports:
+            - 5434:5432
+        environment:
+            POSTGRES_USER: arm_user
+            POSTGRES_PASSWORD: arm_user_password
+            POSTGRES_DB: arm_db
+            PGDATA: /postgres_data
+        volumes:
+            - ./storage/postgres_sudir_dara:/postgres_data
+
     fake_arm:
         build: ./fake_arm
         volumes:
@@ -186,9 +229,11 @@ services:
         depends_on:
             - blockchain_proxy
             - blockchain_service
+            - postgres_arm
         environment:
             BLOCKCHAIN_PROXY_URI: http://blockchain_proxy
             BLOCKCHAIN_SERVICE_URI: http://blockchain_service
+            SQLALCHEMY_DATABASE_URI: "postgresql://arm_user:arm_user_password@postgres_arm:5432/arm_db"
 
     re_encrypt_service:
         command: python /app/re_encrypt_service.py
@@ -225,6 +270,8 @@ services:
         build:
             context: ./deg_codebase/form/encryptor
             dockerfile: ${PWD}/php_env/Dockerfile
+        ports:
+            - 8028:8001
         volumes:
             - ./sample_deg_configs/encryptor/config:/app/config
             - ./sample_deg_configs/encryptor/.env:/app/.env
@@ -341,3 +388,11 @@ services:
             #APP_URL:
             #APP_HTTP_PROTOCOL: http
             #APP_STATIC_URL: /common/static
+    stribog512:
+        build:
+            context: ./stribog512_php
+        ports:
+            - 8027:80
+        environment:
+            PORT: 80
+

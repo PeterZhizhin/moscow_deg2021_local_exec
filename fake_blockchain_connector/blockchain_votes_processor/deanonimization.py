@@ -258,6 +258,7 @@ class DeanonimizedUserResult:
     decrypted_fios: list[str]
     real_decrypted_fios: list[str]
     showing_sid: bool
+    sid: str
 
 
 @dataclasses.dataclass(frozen=True)
@@ -399,10 +400,11 @@ async def deanonimize_all_users(
     for _, row in deanonimized_ballots.iterrows():
         user_deanonimization_results.append(
             DeanonimizedUserResult(
-                row.telegram_user_id,
-                row.decrypted_fios,
-                row.real_decrypted_fios,
-                row.showing_sid,
+                telegram_user_id=row.telegram_user_id,
+                decrypted_fios=row.decrypted_fios,
+                real_decrypted_fios=row.real_decrypted_fios,
+                showing_sid=row.showing_sid,
+                sid=row.sid,
             )
         )
 

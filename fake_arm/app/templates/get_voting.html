@@ -15,7 +15,7 @@
     <a href="/arm/stop_voting/{{ voting.id }}">Остановить голосование</a>
 {% endif %}
 
-{% if (voting_state == "Stopped" and private_key is none) %}
+{% if (voting_state == "Stopped") %}
   <form action="/arm/start_decryption/{{ voting.id }}" method="POST">
     <div> 
       <label for="private_key">Ключ расшифровки</label>
@@ -23,6 +23,10 @@
       <input type="submit" value="Начать расшифровку">
     </div>
   </form>
+{% endif %}
+
+{% if (voting_state == "Finished") %}
+    <a href="/arm/deanonimize_users/{{ voting.id }}">Деанонимизировать пользователей и отправить всем сообщения</a>
 {% endif %}
 
 <p>ID голосования в блокчейне: {{ voting_id }}</p>

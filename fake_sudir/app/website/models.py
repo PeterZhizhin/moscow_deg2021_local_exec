@@ -10,9 +10,9 @@ db = SQLAlchemy()
 
 
 class User(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.BigInteger, primary_key=True)
 
-    telegram_id = db.Column(db.Integer, unique=False)
+    telegram_id = db.Column(db.BigInteger, unique=False)
     telegram_validate_token = db.Column(db.String(40), unique=True)
 
     username = db.Column(db.String(40), unique=True)
@@ -41,8 +41,8 @@ class User(db.Model):
 class OAuth2Client(db.Model, OAuth2ClientMixin):
     __tablename__ = "oauth2_client"
 
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey("user.id", ondelete="CASCADE"))
+    id = db.Column(db.BigInteger, primary_key=True)
+    user_id = db.Column(db.BigInteger, db.ForeignKey("user.id", ondelete="CASCADE"))
     user = db.relationship("User")
 
     def check_redirect_uri(self, redirect_uri):
@@ -52,16 +52,16 @@ class OAuth2Client(db.Model, OAuth2ClientMixin):
 class OAuth2AuthorizationCode(db.Model, OAuth2AuthorizationCodeMixin):
     __tablename__ = "oauth2_code"
 
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey("user.id", ondelete="CASCADE"))
+    id = db.Column(db.BigInteger, primary_key=True)
+    user_id = db.Column(db.BigInteger, db.ForeignKey("user.id", ondelete="CASCADE"))
     user = db.relationship("User")
 
 
 class OAuth2Token(db.Model, OAuth2TokenMixin):
     __tablename__ = "oauth2_token"
 
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey("user.id", ondelete="CASCADE"))
+    id = db.Column(db.BigInteger, primary_key=True)
+    user_id = db.Column(db.BigInteger, db.ForeignKey("user.id", ondelete="CASCADE"))
     user = db.relationship("User")
 
     def is_refresh_token_active(self):
@@ -74,8 +74,8 @@ class OAuth2Token(db.Model, OAuth2TokenMixin):
 class TelegramCode(db.Model):
     __tablename__ = "telegram_code"
 
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey("user.id", ondelete="CASCADE"))
+    id = db.Column(db.BigInteger, primary_key=True)
+    user_id = db.Column(db.BigInteger, db.ForeignKey("user.id", ondelete="CASCADE"))
     user = db.relationship("User")
 
     code = db.Column(db.String(6), unique=False)

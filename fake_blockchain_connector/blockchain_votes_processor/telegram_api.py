@@ -61,20 +61,6 @@ def _format_message_for_user(
         """.strip()
 
 
-async def _send_message_async(
-    bot: telegram.Bot,
-    chat_id: int,
-    text: str,
-):
-    loop = asyncio.get_event_loop()
-    return await loop.run_in_executor(
-        None,
-        bot.send_message,
-        chat_id,
-        text,
-    )
-
-
 async def _send_tg_message_with_retries(
     bot: telegram.Bot,
     user_id: int,
@@ -82,16 +68,15 @@ async def _send_tg_message_with_retries(
     n_retries: int = 3,
     sleep_time_sec: float = 0.5,
 ) -> bool:
-    exceptions = []
     for _ in range(n_retries):
         try:
-            await _send_message_async(bot, user_id, message)
+            await bot.send_message(user_id, message)
+            return True
         except telegram.error.TelegramError as e:
             logging.error(f"Telegram error when sending a message: {e}")
-            exceptions.append(e)
             await asyncio.sleep(sleep_time_sec)
 
-    return bool(exceptions)
+    return False
 
 
 async def _send_all_tg_messages(
