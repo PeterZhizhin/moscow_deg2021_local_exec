@@ -4,7 +4,7 @@ WORKDIR /app
 
 RUN apk fix \
     && apk --update add git \
-    && git clone https://github.com/exonum/blockchain-explorer 
+    && git clone https://github.com/ksemiya/blockchain-explorer
 
 WORKDIR /app/blockchain-explorer
 
