@@ -458,7 +458,7 @@ with app.app_context():
         try:
             db.create_all()
             break
-        except sqlalchemy.exc.OperationalError as e:
+        except (sqlalchemy.exc.OperationalError, sqlalchemy.exc.IntegrityError) as e:
             app.logger.error(f"Database creation failed: {e}")
             current_time = time.time()
             if current_time - wait_start > 60:
