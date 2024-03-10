@@ -13,6 +13,7 @@ services:
             - deg_ballot
     fake_mdm:
         build: ./fake_mdm
+        image: peterzhizhin/images:fake_mdm
 
     postgres_sudir:
         image: postgres
@@ -29,6 +30,7 @@ services:
 
     fake_sudir:
         build: ./fake_sudir
+        image: peterzhizhin/images:fake_sudir
         volumes:
             - ./storage/fake_sudir_db:/app/database
         depends_on:
@@ -42,6 +44,7 @@ services:
     fake_sudir_bot:
         build: ./fake_sudir_bot
         command: python /app/bot.py
+        image: peterzhizhin/images:fake_sudir_bot
         environment:
             TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
             TELEGRAM_BOT_SECRET: "telegram_bot_secret"
@@ -102,6 +105,7 @@ services:
         build:
             context: ./deg_codebase/blockchain/dit-blockchain-source
             dockerfile: ${PWD}/rust_env/Dockerfile
+        image: peterzhizhin/images:blockchain_public
         volumes:
             - ./rust_env/launch.sh:/launch.sh
             - ./rust_env/public_blockchain_config.yaml:/launch_config.yaml
@@ -120,6 +124,7 @@ services:
 
     blockchain_public_explorer:
         build: ./blockchain_explorer
+        image: peterzhizhin/images:blockchain_public_explorer
         ports:
             - 3000:80
         environment:
@@ -132,6 +137,7 @@ services:
         build:
             context: ./deg_codebase/blockchain/dit-blockchain-private-source
             dockerfile: ${PWD}/rust_env/Dockerfile
+        image: peterzhizhin/images:blockchain_private
         volumes:
             - ./rust_env/launch.sh:/launch.sh
             - ./rust_env/private_blockchain_config.yaml:/launch_config.yaml
@@ -150,6 +156,7 @@ services:
 
     blockchain_private_explorer:
         build: ./blockchain_explorer
+        image: peterzhizhin/images:blockchain_private_explorer
         ports:
             - 3100:80
         environment:
@@ -159,6 +166,7 @@ services:
     blockchain_service:
         command: python /app/blockchain_service.py
         build: ./fake_blockchain_connector/blockchain_votes_processor
+        image: peterzhizhin/images:blockchain_service
         ports:
             - 8026:80
         depends_on:
@@ -197,6 +205,7 @@ services:
         build:
             context: .
             dockerfile: ./fake_blockchain_connector/blockchain_proxy/Dockerfile
+        image: peterzhizhin/images:blockchain_proxy
         ports:
             - 8021:80
         depends_on:
@@ -224,6 +233,7 @@ services:
         build: ./fake_arm
         volumes:
             - ./storage/fake_arm:/app/database
+        image: peterzhizhin/images:fake_arm
         ports:
             - 8022:80
         depends_on:
@@ -238,6 +248,7 @@ services:
     re_encrypt_service:
         command: python /app/re_encrypt_service.py
         build: ./fake_blockchain_connector/blockchain_votes_processor
+        image: peterzhizhin/images:re_encrypt_service
         ports:
             - 8025:80
         environment:
@@ -246,6 +257,7 @@ services:
 
     blockchain_votes_processor:
         build: ./fake_blockchain_connector/blockchain_votes_processor
+        image: peterzhizhin/images:blockchain_votes_processor
         ports:
             - 8024:80
         depends_on:
@@ -270,6 +282,7 @@ services:
         build:
             context: ./deg_codebase/form/encryptor
             dockerfile: ${PWD}/php_env/Dockerfile
+        image: peterzhizhin/images:deg_encryptor
         ports:
             - 8028:8001
         volumes:
@@ -284,6 +297,7 @@ services:
         build:
             context: ./deg_codebase/form/componentX
             dockerfile: ${PWD}/php_env/Dockerfile
+        image: peterzhizhin/images:deg_componentx
         volumes:
             - ./sample_deg_configs/componentX/config:/app/config
             - ./sample_deg_configs/componentX/.env:/app/.env
@@ -305,6 +319,7 @@ services:
         build:
             context: ./deg_codebase/form/ballot
             dockerfile: ${PWD}/php_env/Dockerfile
+        image: peterzhizhin/images:deg_ballot
         volumes:
             - ./sample_deg_configs/ballot/config:/app/config
             - ./sample_deg_configs/ballot/.env:/app/.env
@@ -345,6 +360,7 @@ services:
         build:
             context: ./deg_codebase/form/form
             dockerfile: ${PWD}/php_env/Dockerfile
+        image: peterzhizhin/images:deg_form
         volumes:
             - ./sample_deg_configs/form/config:/app/config
             - ./sample_deg_configs/form/.env:/app/.env
@@ -391,6 +407,7 @@ services:
     stribog512:
         build:
             context: ./stribog512_php
+        image: peterzhizhin/images:stribog512
         ports:
             - 8027:80
         environment:
