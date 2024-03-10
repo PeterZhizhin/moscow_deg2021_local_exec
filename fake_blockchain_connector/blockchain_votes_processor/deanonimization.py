@@ -223,9 +223,12 @@ def _tally_to_fio(
     district_candidate_id_to_fio: dict[tuple[int, int], str],
 ) -> dict[tuple[int, str], int]:
     result = {}
-    for district_id_candidate_id, current_tally in tally.items():
-        fio = district_candidate_id_to_fio[district_id_candidate_id]
-        district_id = district_id_candidate_id[0]
+    for (district_id, candidate_id), current_tally in tally.items():
+        fio = (
+            district_candidate_id_to_fio[(district_id, candidate_id)]
+            if candidate_id != 0
+            else "Испорченный бюллетень"
+        )
         result[(district_id, fio)] = current_tally
     return result
 
